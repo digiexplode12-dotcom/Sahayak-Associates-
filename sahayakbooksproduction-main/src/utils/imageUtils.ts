@@ -97,9 +97,37 @@ export function processImageFile(
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Output optimized format
-        const outputMime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        const compressedDataUrl = canvas.toDataURL(outputMime, quality);
+        // Prefer modern WebP for extreme compression with crisp fidelity
+        let compressedDataUrl = '';
+        try {
+          const webpUrl = canvas.toDataURL('image/webp', quality);
+          if (webpUrl && webpUrl.startsWith('data:image/webp')) {
+            compressedDataUrl = webpUrl;
+          }
+        } catch {}
+
+        if (!compressedDataUrl) {
+          const fallbackMime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+          compressedDataUrl = canvas.toDataURL(fallbackMime, quality);
+        }
+
+        // If still over 800KB, scale down to ensure reliable persistence
+        if (compressedDataUrl.length > 800000 && width > 1000) {
+          try {
+            const smallCanvas = document.createElement('canvas');
+            const targetW = Math.round(width * 0.75);
+            const targetH = Math.round(height * 0.75);
+            smallCanvas.width = targetW;
+            smallCanvas.height = targetH;
+            const smallCtx = smallCanvas.getContext('2d');
+            if (smallCtx) {
+              smallCtx.imageSmoothingEnabled = true;
+              smallCtx.imageSmoothingQuality = 'high';
+              smallCtx.drawImage(canvas, 0, 0, targetW, targetH);
+              compressedDataUrl = smallCanvas.toDataURL('image/webp', 0.82);
+            }
+          } catch {}
+        }
 
         // Calculate approximate base64 payload size
         const stringLength = compressedDataUrl.length - 'data:image/jpeg;base64,'.length;
@@ -130,3 +158,17 @@ export function processImageFile(
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Convenience helper to compress any image file directly to a safe, persistent base64 data URL
+ */
+export async function compressImageToSafeDataUrl(
+  file: File,
+  maxWidth: number = 1600,
+  maxHeight: number = 1600,
+  quality: number = 0.85
+): Promise<string> {
+  const processed = await processImageFile(file, maxWidth, maxHeight, quality);
+  return processed.dataUrl;
+}
+

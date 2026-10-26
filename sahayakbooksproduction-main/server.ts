@@ -1013,7 +1013,15 @@ async function startServer() {
     try {
       const db = getDatabase();
       const oldSettings = db.settings || {};
-      const newSettings = { ...oldSettings, ...req.body };
+      const mergedSiteImages = {
+        ...(oldSettings.siteImages || {}),
+        ...(req.body.siteImages || {}),
+      };
+      const newSettings = {
+        ...oldSettings,
+        ...req.body,
+        siteImages: mergedSiteImages,
+      };
       
       const auditLogs = [...(db.auditLogs || [])];
       const newLogo = req.body.logoUrl || req.body.mainLogo;

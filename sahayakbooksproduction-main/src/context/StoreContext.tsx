@@ -34,6 +34,7 @@ import {
   INITIAL_SETTINGS,
   INITIAL_MEDIA,
 } from '../data/initialData';
+import { getSiteImagesFromIndexedDB, saveSiteImagesToIndexedDB } from '../utils/siteImagesStorage';
 
 interface StoreContextType {
   // Data
@@ -275,6 +276,11 @@ function broadcastTabSync(key: string, data: any) {
     console.warn(`[TabSync] Failed to write ${key} to localStorage:`, err);
   }
 
+  // Always mirror siteImages to IndexedDB to guarantee persistence against storage quota limits
+  if (key === 'sahayak_settings' && data?.siteImages) {
+    saveSiteImagesToIndexedDB(data.siteImages).catch(() => {});
+  }
+
   try {
     if ('BroadcastChannel' in window) {
       const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
@@ -359,7 +365,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('sahayak_settings');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') return { ...INITIAL_SETTINGS, ...parsed };
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...INITIAL_SETTINGS,
+            ...parsed,
+            siteImages: {
+              ...(INITIAL_SETTINGS.siteImages || {}),
+              ...(parsed.siteImages || {}),
+            },
+          };
+        }
       }
     } catch {}
     return INITIAL_SETTINGS;
@@ -842,13 +857,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const localSaved = localStorage.getItem('sahayak_settings');
             let localSettings: any = {};
             try { localSettings = localSaved ? JSON.parse(localSaved) : {}; } catch {}
+
+            let indexedSiteImages: any = null;
+            try {
+              indexedSiteImages = await getSiteImagesFromIndexedDB();
+            } catch {}
+
+            const mergedSiteImages = {
+              ...(INITIAL_SETTINGS.siteImages || {}),
+              ...(data[5].settings?.siteImages || {}),
+              ...(localSettings?.siteImages || {}),
+              ...(indexedSiteImages || {}),
+            };
+
             const finalSettings = {
+              ...INITIAL_SETTINGS,
               ...data[5].settings,
               ...localSettings,
-              siteImages: {
-                ...(data[5].settings?.siteImages || {}),
-                ...(localSettings?.siteImages || {}),
-              },
+              siteImages: mergedSiteImages,
               contactInfo: {
                 ...(data[5].settings?.contactInfo || {}),
                 ...(localSettings?.contactInfo || {}),
@@ -856,6 +882,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             };
             setSettings(finalSettings);
             try { localStorage.setItem('sahayak_settings', JSON.stringify(finalSettings)); } catch {}
+            if (mergedSiteImages) {
+              saveSiteImagesToIndexedDB(mergedSiteImages).catch(() => {});
+            }
           }
 
           // 7. Reviews
@@ -875,6 +904,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
     loadServerDb();
+
+    // Hydrate site images from IndexedDB (preserves custom uploaded images even across hard refreshes)
+    getSiteImagesFromIndexedDB().then((indexedImages) => {
+      if (indexedImages && typeof indexedImages === 'object' && Object.keys(indexedImages).length > 0) {
+        setSettings((prev) => {
+          const next = {
+            ...prev,
+            siteImages: {
+              ...(prev.siteImages || {}),
+              ...indexedImages,
+            },
+          };
+          return next;
+        });
+      }
+    }).catch(() => {});
+
     return () => {
       isMounted = false;
     };
@@ -2177,10 +2223,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Settings & Content
   const updateSettings = async (newSettings: Partial<WebsiteSettings>) => {
     try {
+      // 1. Immediately persist custom images to IndexedDB so they never get lost
+      if (newSettings.siteImages) {
+        await saveSiteImagesToIndexedDB(newSettings.siteImages);
+      }
+
       const resData = await persistToServer('/api/settings', 'PUT', newSettings);
       const updated = resData?.settings || newSettings;
       setSettings((prev) => {
-        const next = { ...prev, ...updated };
+        const mergedSiteImages = {
+          ...(prev.siteImages || {}),
+          ...(newSettings.siteImages || {}),
+          ...(updated.siteImages || {}),
+        };
+        const next = {
+          ...prev,
+          ...updated,
+          siteImages: mergedSiteImages,
+        };
         broadcastTabSync('sahayak_settings', next);
         return next;
       });

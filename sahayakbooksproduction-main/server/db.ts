@@ -33,7 +33,9 @@ export interface DatabaseSchema {
   updatedAt: string;
 }
 
-const DB_DIR = path.join(process.cwd(), 'data');
+const DB_DIR = fs.existsSync(path.join(process.cwd(), 'sahayakbooksproduction-main', 'data'))
+  ? path.join(process.cwd(), 'sahayakbooksproduction-main', 'data')
+  : path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'db.json');
 
 // Ensure directory exists

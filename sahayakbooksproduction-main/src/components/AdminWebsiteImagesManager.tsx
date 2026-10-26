@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { WebsiteSiteImages } from '../types';
 import { uploadFileToR2 } from '../services/r2MediaService';
+import { compressImageToSafeDataUrl } from '../utils/imageUtils';
+import { saveSiteImagesToIndexedDB } from '../utils/siteImagesStorage';
 import {
   Image as ImageIcon,
   Upload,
@@ -141,6 +143,17 @@ export const AdminWebsiteImagesManager: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [savedKey, setSavedKey] = useState<string | null>(null);
+
+  // Sync draft siteImages whenever stored settings update
+  useEffect(() => {
+    if (settings.siteImages && !hasUnsavedChanges) {
+      setSiteImages((prev) => ({
+        ...prev,
+        ...settings.siteImages,
+      }));
+    }
+  }, [settings.siteImages, hasUnsavedChanges]);
 
   // Media Library Picker Modal
   const [pickingForImageKey, setPickingForImageKey] = useState<keyof WebsiteSiteImages | null>(null);
@@ -203,30 +216,42 @@ export const AdminWebsiteImagesManager: React.FC = () => {
       });
 
       const effectiveUrl = uploaded.publicUrl || uploaded.url;
-      setSiteImages((prev) => ({
-        ...prev,
+      const updatedImages: WebsiteSiteImages = {
+        ...siteImages,
         [def.key]: effectiveUrl,
         [def.hiddenKey]: false,
-      }));
-      setHasUnsavedChanges(true);
-      showToast(`Uploaded new asset for ${def.title}!`);
-    } catch (err: any) {
-      console.warn('Upload error, falling back to FileReader base64:', err);
-      // Client-side fallback to base64
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        if (base64) {
-          setSiteImages((prev) => ({
-            ...prev,
-            [def.key]: base64,
-            [def.hiddenKey]: false,
-          }));
-          setHasUnsavedChanges(true);
-          showToast(`Loaded image asset for ${def.title}!`);
-        }
       };
-      reader.readAsDataURL(file);
+      setSiteImages(updatedImages);
+      await saveSiteImagesToIndexedDB(updatedImages);
+      await updateSettings({
+        siteImages: updatedImages,
+        mainLogo: updatedImages.logo || settings.mainLogo,
+        footerLogo: updatedImages.footerLogo || settings.footerLogo,
+      });
+      setHasUnsavedChanges(false);
+      showToast(`Uploaded and saved new asset for ${def.title}!`);
+    } catch (err: any) {
+      console.warn('Remote upload unavailable, optimizing and saving locally:', err);
+      try {
+        const safeDataUrl = await compressImageToSafeDataUrl(file, 1600, 1600, 0.85);
+        const updatedImages: WebsiteSiteImages = {
+          ...siteImages,
+          [def.key]: safeDataUrl,
+          [def.hiddenKey]: false,
+        };
+        setSiteImages(updatedImages);
+        // Automatically save immediately to IndexedDB and settings
+        await saveSiteImagesToIndexedDB(updatedImages);
+        await updateSettings({
+          siteImages: updatedImages,
+          mainLogo: updatedImages.logo || settings.mainLogo,
+          footerLogo: updatedImages.footerLogo || settings.footerLogo,
+        });
+        setHasUnsavedChanges(false);
+        showToast(`Loaded, optimized and saved image for ${def.title}!`);
+      } catch (procErr: any) {
+        showToast(`Failed to process image: ${procErr.message || 'Unknown error'}`);
+      }
     } finally {
       setUploadingKeys((prev) => ({ ...prev, [def.key]: false }));
       setUploadProgress((prev) => ({ ...prev, [def.key]: 0 }));
@@ -287,10 +312,11 @@ export const AdminWebsiteImagesManager: React.FC = () => {
     showToast('All website images have been reset to defaults. Click Save & Publish to save.');
   };
 
-  // Save All Changes to Server
-  const handleSaveAll = async () => {
+  // Save All Changes to Server & Persistent Storage
+  const handleSaveAll = async (targetKey?: string) => {
     setIsSavingAll(true);
     try {
+      await saveSiteImagesToIndexedDB(siteImages);
       await updateSettings({
         siteImages,
         // Also keep legacy logo and footer fields in sync
@@ -298,7 +324,11 @@ export const AdminWebsiteImagesManager: React.FC = () => {
         footerLogo: siteImages.footerLogo || settings.footerLogo,
       });
       setHasUnsavedChanges(false);
-      showToast('All website images saved and published live to database!');
+      if (targetKey) {
+        setSavedKey(targetKey);
+        setTimeout(() => setSavedKey(null), 2500);
+      }
+      showToast('All website images saved and published live to website!');
     } catch (err: any) {
       showToast(`Error saving images: ${err.message || 'Unknown error'}`);
     } finally {
@@ -697,12 +727,16 @@ export const AdminWebsiteImagesManager: React.FC = () => {
                   )}
 
                   <button
-                    onClick={handleSaveAll}
+                    onClick={() => handleSaveAll(def.key as string)}
                     disabled={isSavingAll}
-                    className="px-3 py-1.5 rounded-xl font-bold bg-[#C5A059] text-[#0B192C] hover:bg-[#D8B76E] transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                    className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1 ${
+                      savedKey === def.key
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-[#C5A059] text-[#0B192C] hover:bg-[#D8B76E]'
+                    }`}
                   >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save</span>
+                    {savedKey === def.key ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>{savedKey === def.key ? 'Saved!' : 'Save'}</span>
                   </button>
                 </div>
               </div>
