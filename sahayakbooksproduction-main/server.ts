@@ -219,8 +219,11 @@ async function startServer() {
       const { email, password, rememberMe } = req.body;
       let cleanEmail = normalizeEmail(email);
 
-      // Gracefully handle common admin typos like sahayakkassociates (two k's)
+      // Gracefully handle username "Sandeep Sahni" or common admin typos
       if (
+        cleanEmail === 'sandeep sahni' ||
+        cleanEmail === 'sandeepsahni' ||
+        cleanEmail === 'sandeep' ||
         cleanEmail === 'admin@sahayakkassociates.org' ||
         cleanEmail === 'admin@sahayakassociates.com' ||
         cleanEmail === 'admin@sahayak.com' ||
@@ -238,13 +241,14 @@ async function startServer() {
       const user = (db.allUsers || []).find((u: any) => normalizeEmail(u.email) === cleanEmail);
 
       const validAdminFallbacks = [
+        'Sandeep$123',
+        'sandeep$123',
         'Admin@12345',
         'admin@12345',
         'Admin123',
         'admin123',
         'Admin@123',
         'admin@123',
-        'admin@12345',
         'Admin@2025',
         'Admin@2026',
       ];

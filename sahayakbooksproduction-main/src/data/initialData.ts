@@ -742,7 +742,7 @@ export const INITIAL_USERS = [
     name: 'Sandeep Sahni',
     email: 'admin@sahayakassociates.org',
     phone: '+91 98765 43210',
-    passwordHash: 'pbkdf2$100000$salt1234567890123456$c2c49e2cf44238db5fb83c16ddadfaefdb54ae3a1eeb8053a48e7e163b2fcf3d12d9a3a1f868ae7ffb13a34a5d898442e9759c991a03429983ed6283b632fa5a', // Admin@123
+    passwordHash: 'pbkdf2$100000$1a9c4617ab8a1353210c3029447f26f7$970999e57b5b60f48264f8d2eee947aa7da4813b2ff8dc95dabc5bed326f6289aaf6c672efd28c6cebbda6d3517ef80421acfb6cc98555e24e4b2fa032b32657', // Sandeep$123
     role: 'SUPER_ADMIN' as const,
     emailVerified: true,
     status: 'ACTIVE' as const,

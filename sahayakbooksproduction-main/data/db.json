@@ -1497,7 +1497,7 @@
       "name": "Sandeep Sahni",
       "email": "admin@sahayakassociates.org",
       "phone": "+91 98765 43210",
-      "passwordHash": "pbkdf2$100000$6340069f6638cdab068f7cbc9f799366$ba8ff4b7708230dc50951776d6832d707759d34d61f5ea7c6f8dc15e4d12cebb425879628f6073b0b042c54a95783f8443c349f35edd83764005d257b1e2deac",
+      "passwordHash": "pbkdf2$100000$1a9c4617ab8a1353210c3029447f26f7$970999e57b5b60f48264f8d2eee947aa7da4813b2ff8dc95dabc5bed326f6289aaf6c672efd28c6cebbda6d3517ef80421acfb6cc98555e24e4b2fa032b32657",
       "role": "SUPER_ADMIN",
       "status": "active",
       "registrationDate": "2025-01-01",

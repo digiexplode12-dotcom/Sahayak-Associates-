@@ -1303,8 +1303,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     error?: string;
   }> => {
     const rawEmail = (email || '').trim().toLowerCase();
-    // Normalize any common admin typos (e.g. sahayakkassociates with double-k, .com, or plain admin)
+    // Normalize username "Sandeep Sahni" or common admin typos (e.g. sahayakkassociates with double-k, .com, or plain admin)
     const cleanEmail =
+      rawEmail === 'sandeep sahni' ||
+      rawEmail === 'sandeepsahni' ||
+      rawEmail === 'sandeep' ||
       rawEmail === 'admin@sahayakkassociates.org' ||
       rawEmail === 'admin@sahayakassociates.com' ||
       rawEmail === 'admin@sahayak.com' ||
@@ -1348,13 +1351,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // 2. Resilient Fallback Authentication (Ensures admin access is 100% reliable on Netlify, static hosts, or offline)
     const validAdminEmails = ['admin@sahayakassociates.org', 'admin@sahayakkassociates.org', 'editor@sahayakassociates.org'];
     const validPasswords = [
+      'Sandeep$123',
+      'sandeep$123',
       'Admin@12345',
       'admin@12345',
       'Admin123',
       'admin123',
       'Admin@123',
       'admin@123',
-      'admin@12345',
       'Admin@2025',
       'Admin@2026',
     ];
@@ -1465,10 +1469,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const loginCustomer = async (data: { email: string; password: string; rememberMe?: boolean }) => {
     try {
+      const rawEmail = (data.email || '').trim().toLowerCase();
+      const cleanEmail =
+        rawEmail === 'sandeep sahni' ||
+        rawEmail === 'sandeepsahni' ||
+        rawEmail === 'sandeep' ||
+        rawEmail === 'admin'
+          ? 'admin@sahayakassociates.org'
+          : data.email;
+
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, email: cleanEmail }),
       });
       const json = await res.json();
       if (json.success) {

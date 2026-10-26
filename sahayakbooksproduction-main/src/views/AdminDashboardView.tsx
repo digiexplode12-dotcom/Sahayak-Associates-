@@ -682,11 +682,15 @@ export const AdminDashboardView: React.FC = () => {
   const handleAdminLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let emailToUse = loginEmail.trim();
-    // Auto-correct common typos (such as sahayakkassociates with two k's)
+    // Auto-correct username "Sandeep Sahni" or common typos (such as sahayakkassociates with two k's)
+    const lowered = emailToUse.toLowerCase();
     if (
-      emailToUse.toLowerCase() === 'admin@sahayakkassociates.org' ||
-      emailToUse.toLowerCase() === 'admin@sahayakassociates.com' ||
-      emailToUse.toLowerCase() === 'admin'
+      lowered === 'sandeep sahni' ||
+      lowered === 'sandeepsahni' ||
+      lowered === 'sandeep' ||
+      lowered === 'admin@sahayakkassociates.org' ||
+      lowered === 'admin@sahayakassociates.com' ||
+      lowered === 'admin'
     ) {
       emailToUse = 'admin@sahayakassociates.org';
       setLoginEmail(emailToUse);
@@ -1189,14 +1193,14 @@ export const AdminDashboardView: React.FC = () => {
 
           <form onSubmit={handleAdminLoginSubmit} className="space-y-4 text-xs">
             <div>
-              <label className="block font-bold text-stone-700 mb-1">Administrative Email</label>
+              <label className="block font-bold text-stone-700 mb-1">Administrative Username or Email</label>
               <input
-                type="email"
+                type="text"
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="Enter administrator email"
-                autoComplete="email"
+                placeholder="Sandeep Sahni or admin@sahayakassociates.org"
+                autoComplete="username"
                 className="w-full p-3 bg-stone-50 border border-stone-300 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B192C]"
               />
             </div>
