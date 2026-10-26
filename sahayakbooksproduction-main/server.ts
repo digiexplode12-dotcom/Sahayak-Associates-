@@ -36,6 +36,17 @@ import {
 } from './server/googleMerchant';
 
 dotenv.config();
+const possibleEnvPaths = [
+  path.join(process.cwd(), '.env'),
+  path.join(process.cwd(), 'sahayakbooksproduction-main', '.env'),
+  path.join(__dirname, '.env'),
+  path.join(__dirname, '..', '.env'),
+];
+for (const p of possibleEnvPaths) {
+  if (fs.existsSync(p)) {
+    dotenv.config({ path: p });
+  }
+}
 
 function sanitizeUser(user: any) {
   if (!user) return null;
