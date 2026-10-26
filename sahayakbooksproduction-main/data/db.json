@@ -968,6 +968,19 @@
       "footerLogoHidden": false,
       "mascotHidden": false,
       "founderPortraitHidden": false
+    },
+    "homepageSections": {
+      "heroBanner": true,
+      "statsRibbon": true,
+      "aboutUs": true,
+      "marketTicker": true,
+      "valueCards": true,
+      "goalPlanning": true,
+      "productBasket": true,
+      "gurukul": true,
+      "bookstore": true,
+      "founderSpotlight": true,
+      "consultationCta": true
     }
   },
   "mediaItems": [

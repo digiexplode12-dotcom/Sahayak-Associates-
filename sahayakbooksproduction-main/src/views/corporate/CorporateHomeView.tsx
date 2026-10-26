@@ -5,6 +5,21 @@ import { BookCard } from '../../components/BookCard';
 export const CorporateHomeView: React.FC = () => {
   const { navigate, books = [], settings, authors = [] } = useStore();
 
+  const sections = settings?.homepageSections || {
+    heroBanner: true,
+    statsRibbon: true,
+    aboutUs: true,
+    marketTicker: true,
+    valueCards: true,
+    productBasket: true,
+    whyDifferent: true,
+    ourProcess: true,
+    whySahayak: true,
+    gurukul: true,
+    goalPlanning: true,
+    bookstore: true,
+  };
+
   // Dynamic Site Images configured from Admin Panel
   const heroBackgroundUrl = settings?.siteImages?.heroBackgroundHidden
     ? null
@@ -145,7 +160,8 @@ export const CorporateHomeView: React.FC = () => {
       {/* =========================================================================
           SECTION 1: PREMIUM HERO
           ========================================================================= */}
-      <section className="relative w-full min-h-[620px] lg:min-h-[700px] xl:min-h-[740px] lg:h-[calc(100vh-250px)] max-h-none lg:max-h-[820px] bg-[#040D1A] text-white flex items-center overflow-hidden border-b border-stone-800">
+      {sections.heroBanner !== false && (
+        <section className="relative w-full min-h-[620px] lg:min-h-[700px] xl:min-h-[740px] lg:h-[calc(100vh-250px)] max-h-none lg:max-h-[820px] bg-[#040D1A] text-white flex items-center overflow-hidden border-b border-stone-800">
         {/* Wireframe Bull & Bear Artwork Backdrop - Full Viewport Cover (Configurable via Admin Images Manager) */}
         {heroBackgroundUrl && (
           <div
@@ -311,11 +327,13 @@ export const CorporateHomeView: React.FC = () => {
           </svg>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 2: ACHIEVEMENT COUNTERS STRIP (A LITTLE ABOVE THE BOTTOM)
           ========================================================================= */}
-      <section className="w-full bg-[#FAF7F2]">
+      {sections.statsRibbon !== false && (
+        <section className="w-full bg-[#FAF7F2]">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 border-t border-b border-[#E2DCCE] divide-y md:divide-y-0 md:divide-x divide-[#E2DCCE]">
             {/* Stat 1: 11+ */}
@@ -360,11 +378,13 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 3: ABOUT US (STRICTLY BELOW THE FOLD ON INITIAL LOAD)
           ========================================================================= */}
-      <section className="w-full bg-[#FAF7F2] pt-28 sm:pt-32 lg:pt-36 pb-20 border-b border-stone-200">
+      {sections.aboutUs !== false && (
+        <section className="w-full bg-[#FAF7F2] pt-28 sm:pt-32 lg:pt-36 pb-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left: Authentic Office Entrance Photograph */}
@@ -421,11 +441,13 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 4: FINANCIAL PHILOSOPHY TICKER
           ========================================================================= */}
-      <section className="w-full bg-[#071526] py-3.5 overflow-hidden border-y border-stone-800 text-white">
+      {sections.marketTicker !== false && (
+        <section className="w-full bg-[#071526] py-3.5 overflow-hidden border-y border-stone-800 text-white">
         <div className="animate-sa-marquee text-xs font-mono tracking-widest uppercase">
           {[
             'Client First Always — Goal Based Investment only',
@@ -460,11 +482,13 @@ export const CorporateHomeView: React.FC = () => {
           ))}
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 5: HOW WE ADD VALUE
           ========================================================================= */}
-      <section className="w-full bg-[#F5F2EA] py-20 border-b border-stone-200">
+      {sections.valueCards !== false && (
+        <section className="w-full bg-[#F5F2EA] py-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
             <div>
@@ -544,11 +568,13 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 6: THE SAHAYAK PRODUCT BASKET (SERVICES)
           ========================================================================= */}
-      <section className="w-full bg-[#071526] text-white py-20 border-b border-stone-800">
+      {sections.productBasket !== false && (
+        <section className="w-full bg-[#071526] text-white py-20 border-b border-stone-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
             <div>
@@ -618,11 +644,13 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 7: WHAT MAKES SAHAYAK DIFFERENT?
           ========================================================================= */}
-      <section className="w-full bg-[#FAF7F2] py-20 border-b border-stone-200">
+      {sections.whyDifferent !== false && (
+        <section className="w-full bg-[#FAF7F2] py-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-left">
             <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
@@ -746,11 +774,13 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 8: OUR PROCESS (5-STAGE CONNECTED TIMELINE)
           ========================================================================= */}
-      <section className="w-full bg-[#050F1E] text-white py-20 border-b border-stone-800">
+      {sections.ourProcess !== false && (
+        <section className="w-full bg-[#050F1E] text-white py-20 border-b border-stone-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
@@ -854,11 +884,13 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 9: WHY SAHAYAK ASSOCIATES?
           ========================================================================= */}
-      <section className="w-full bg-[#F5F2EA] py-20 border-b border-stone-200">
+      {sections.whySahayak !== false && (
+        <section className="w-full bg-[#F5F2EA] py-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
             <div className="lg:col-span-4 space-y-3">
@@ -899,11 +931,13 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 10: SAHAYAK GURUKUL
           ========================================================================= */}
-      <section className="w-full bg-[#FAF7F2] py-20 border-b border-stone-200">
+      {sections.gurukul !== false && (
+        <section className="w-full bg-[#FAF7F2] py-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           {/* Header & Description */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -1005,118 +1039,127 @@ export const CorporateHomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================================================
           SECTION 11: FINANCIAL GOAL PLANNING ACCORDION + INTEGRATED BOOKSTORE SPOTLIGHT
           ========================================================================= */}
-      <section className="w-full bg-[#F5F2EA] py-20 border-b border-stone-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          {/* Top: Goal Planning */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-5">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
-                <span className="w-8 h-px bg-[#C9A24E]" />
-                <span>GOAL PLANNING</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#071526] mt-2">
-                How can we help you achieve your{' '}
-                <span className="italic font-normal text-[#C9A24E]">goals?</span>
-              </h2>
-            </div>
-            <div className="lg:col-span-7">
-              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
-                At Sahayak Associates, we understand that your financial journey is personal. Whether you&apos;re planning for retirement, your child&apos;s education, buying your dream home, or simply seeking financial freedom — we&apos;re here to walk with you every step of the way. Here&apos;s how we help you turn goals into reality:
-              </p>
-            </div>
-          </div>
-
-          {/* Accordion List */}
-          <div className="space-y-3">
-            {accordionItems.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-xl border border-stone-200/90 overflow-hidden shadow-sm transition-all"
-              >
-                <button
-                  onClick={() => setOpenAccordion(openAccordion === idx ? null : idx)}
-                  className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-stone-50 transition-colors focus:outline-none"
-                >
-                  <span className="font-serif font-semibold text-sm sm:text-base text-[#071526]">
-                    {item.title}
-                  </span>
-                  <span className="text-xl font-light text-[#C9A24E] ml-4">
-                    {openAccordion === idx ? '−' : '+'}
-                  </span>
-                </button>
-                {openAccordion === idx && (
-                  <div className="px-6 pb-4 pt-1 text-xs sm:text-sm text-stone-600 border-t border-stone-100 leading-relaxed animate-in fade-in duration-200">
-                    {item.content}
+      {(sections.goalPlanning !== false || sections.bookstore !== false) && (
+        <section className="w-full bg-[#F5F2EA] py-20 border-b border-stone-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            {sections.goalPlanning !== false && (
+              <>
+                {/* Top: Goal Planning */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  <div className="lg:col-span-5">
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
+                      <span className="w-8 h-px bg-[#C9A24E]" />
+                      <span>GOAL PLANNING</span>
+                    </div>
+                    <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#071526] mt-2">
+                      How can we help you achieve your{' '}
+                      <span className="italic font-normal text-[#C9A24E]">goals?</span>
+                    </h2>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Integrated Sahayak Books Spotlight */}
-          <div className="mt-16 pt-16 border-t border-stone-300">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
-              <div>
-                <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
-                  <span>PUBLISHING DIVISION</span>
+                  <div className="lg:col-span-7">
+                    <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
+                      At Sahayak Associates, we understand that your financial journey is personal. Whether you&apos;re planning for retirement, your child&apos;s education, buying your dream home, or simply seeking financial freedom — we&apos;re here to walk with you every step of the way. Here&apos;s how we help you turn goals into reality:
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#071526] mt-1">
-                  Books by Sandeep Sahni &amp; Sahayak Associates
-                </h3>
-                <p className="text-xs sm:text-sm text-stone-600 mt-1">
-                  Thoughtfully written financial literature to educate, guide, and inspire.
-                </p>
-              </div>
 
-              <button
-                onClick={() => navigate('/books')}
-                className="mt-3 sm:mt-0 inline-flex items-center gap-1.5 text-xs font-semibold text-[#071526] hover:text-[#C9A24E] transition-colors"
-              >
-                <span>Visit Bookstore</span>
-                <span>→</span>
-              </button>
-            </div>
-
-            {/* Author Avatars Bar */}
-            {authors.length > 0 && (
-              <div className="flex flex-wrap items-center gap-3 mb-6">
-                <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Featured Authors:</span>
-                {authors.map((auth) => (
-                  <button
-                    key={auth.id}
-                    onClick={() => navigate(`/authors/${auth.slug}`)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200/90 hover:border-[#C9A24E] shadow-sm transition-all group cursor-pointer"
-                  >
-                    <img
-                      src={auth.avatar}
-                      alt={auth.name}
-                      className="w-6 h-6 rounded-full object-cover border border-[#C9A24E]"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png';
-                      }}
-                    />
-                    <span className="text-xs font-bold text-[#071526] group-hover:text-[#C9A24E] transition-colors">
-                      {auth.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
+                {/* Accordion List */}
+                <div className="space-y-3">
+                  {accordionItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-xl border border-stone-200/90 overflow-hidden shadow-sm transition-all"
+                    >
+                      <button
+                        onClick={() => setOpenAccordion(openAccordion === idx ? null : idx)}
+                        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-stone-50 transition-colors focus:outline-none"
+                      >
+                        <span className="font-serif font-semibold text-sm sm:text-base text-[#071526]">
+                          {item.title}
+                        </span>
+                        <span className="text-xl font-light text-[#C9A24E] ml-4">
+                          {openAccordion === idx ? '−' : '+'}
+                        </span>
+                      </button>
+                      {openAccordion === idx && (
+                        <div className="px-6 pb-4 pt-1 text-xs sm:text-sm text-stone-600 border-t border-stone-100 leading-relaxed animate-in fade-in duration-200">
+                          {item.content}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
 
-            {/* Book Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              {books.slice(0, 4).map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
+            {/* Integrated Sahayak Books Spotlight */}
+            {sections.bookstore !== false && (
+              <div className={sections.goalPlanning !== false ? "mt-16 pt-16 border-t border-stone-300" : ""}>
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
+                  <div>
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
+                      <span>PUBLISHING DIVISION</span>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#071526] mt-1">
+                      Books by Sandeep Sahni &amp; Sahayak Associates
+                    </h3>
+                    <p className="text-xs sm:text-sm text-stone-600 mt-1">
+                      Thoughtfully written financial literature to educate, guide, and inspire.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => navigate('/books')}
+                    className="mt-3 sm:mt-0 inline-flex items-center gap-1.5 text-xs font-semibold text-[#071526] hover:text-[#C9A24E] transition-colors"
+                  >
+                    <span>Visit Bookstore</span>
+                    <span>→</span>
+                  </button>
+                </div>
+
+                {/* Author Avatars Bar */}
+                {authors.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-3 mb-6">
+                    <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Featured Authors:</span>
+                    {authors.map((auth) => (
+                      <button
+                        key={auth.id}
+                        onClick={() => navigate(`/authors/${auth.slug}`)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200/90 hover:border-[#C9A24E] shadow-sm transition-all group cursor-pointer"
+                      >
+                        <img
+                          src={auth.avatar}
+                          alt={auth.name}
+                          className="w-6 h-6 rounded-full object-cover border border-[#C9A24E]"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png';
+                          }}
+                        />
+                        <span className="text-xs font-bold text-[#071526] group-hover:text-[#C9A24E] transition-colors">
+                          {auth.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Book Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  {books.slice(0, 4).map((book) => (
+                    <BookCard key={book.id} book={book} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };

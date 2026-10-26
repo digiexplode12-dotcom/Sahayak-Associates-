@@ -9,6 +9,7 @@ import { AdminAuthorsSection } from '../components/AdminAuthorsSection';
 import { AdminGoogleShoppingSection } from '../components/AdminGoogleShoppingSection';
 import { BookGoogleShoppingTab } from '../components/BookGoogleShoppingTab';
 import { AdminWebsiteImagesManager } from '../components/AdminWebsiteImagesManager';
+import { AdminHomepageLayoutManager } from '../components/AdminHomepageLayoutManager';
 import { processImageFile } from '../utils/imageUtils';
 import {
   LayoutDashboard,
@@ -71,6 +72,7 @@ import {
   MessageCircle,
   ArrowUp,
   ArrowDown,
+  LogOut,
 } from 'lucide-react';
 
 const CURATED_BOOK_COVERS = [
@@ -1300,24 +1302,27 @@ export const AdminDashboardView: React.FC = () => {
           <button
             id="admin-header-storefront-btn"
             onClick={() => navigate('/')}
-            className="px-4 py-2.5 bg-[#C5A059] hover:bg-[#D8B76E] text-[#0B192C] text-xs font-bold rounded-xl border border-[#C5A059] transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="px-4 py-2.5 bg-[#C5A059] hover:bg-[#D8B76E] text-[#0B192C] text-xs font-bold rounded-xl border border-[#C5A059] transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             title="Open Storefront in Live Mode"
           >
             <Home className="w-3.5 h-3.5" />
-            <span>Go to Home</span>
+            <span>Go to Store</span>
           </button>
 
           <button
-            id="admin-header-exit-btn"
+            id="admin-header-signout-btn"
             onClick={() => {
-              adminLogout();
-              navigate('/');
+              if (window.confirm('Are you sure you want to sign out of the Admin Panel?')) {
+                adminLogout();
+                showToast('Signed out of admin panel successfully.');
+                navigate('/');
+              }
             }}
-            className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-stone-200 text-xs font-bold rounded-xl border border-white/15 transition-colors flex items-center gap-1.5 cursor-pointer"
-            title="Sign out and Return to Storefront Home"
+            className="px-4 py-2.5 bg-rose-600/20 hover:bg-rose-600 text-rose-200 hover:text-white text-xs font-bold rounded-xl border border-rose-500/30 hover:border-rose-600 transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
+            title="Sign out of Admin Panel"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Exit to Store</span>
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
           </button>
         </div>
       </div>
@@ -2695,51 +2700,7 @@ export const AdminDashboardView: React.FC = () => {
         {/* 9. HOMEPAGE SECTIONS CONTROLLER */}
         {/* ==================================================== */}
         {activeTab === 'sections' && (
-          <form onSubmit={handleSaveSettings} className="space-y-6 max-w-xl">
-            <div>
-              <h2 className="font-serif text-2xl font-bold text-[#0B192C]">
-                Homepage Layout Controller
-              </h2>
-              <p className="text-xs text-stone-500">
-                Toggle which curated sections render on the public storefront homepage.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {Object.entries(formSettings.homepageSections).map(([key, isEnabled]) => (
-                <label
-                  key={key}
-                  className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 flex items-center justify-between cursor-pointer hover:bg-stone-100 text-xs"
-                >
-                  <span className="font-bold text-stone-800 capitalize">
-                    {key.replace(/([A-Z])/g, ' $1')} Module
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={isEnabled}
-                    onChange={(e) =>
-                      setFormSettings({
-                        ...formSettings,
-                        homepageSections: {
-                          ...formSettings.homepageSections,
-                          [key]: e.target.checked,
-                        },
-                      })
-                    }
-                    className="w-4 h-4 rounded accent-[#0B192C]"
-                  />
-                </label>
-              ))}
-            </div>
-
-            <button
-              type="submit"
-              className="px-6 py-3 bg-[#0B192C] text-[#C5A059] text-xs font-bold rounded-xl hover:bg-[#152A4A] flex items-center gap-2 cursor-pointer"
-            >
-              <Save className="w-4 h-4" />
-              <span>Apply Section Layout</span>
-            </button>
-          </form>
+          <AdminHomepageLayoutManager />
         )}
 
         {/* ==================================================== */}

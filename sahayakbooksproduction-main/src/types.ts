@@ -526,6 +526,22 @@ export interface WebsiteSiteImages {
   [key: string]: any;
 }
 
+export interface HomepageSectionsConfig {
+  heroBanner: boolean;
+  statsRibbon: boolean;
+  aboutUs: boolean;
+  marketTicker: boolean;
+  valueCards: boolean;
+  productBasket: boolean;
+  whyDifferent: boolean;
+  ourProcess: boolean;
+  whySahayak: boolean;
+  gurukul: boolean;
+  goalPlanning: boolean;
+  bookstore: boolean;
+  [key: string]: boolean;
+}
+
 export interface WebsiteSettings {
   brandName: string;
   tagline: string;
@@ -543,6 +559,9 @@ export interface WebsiteSettings {
 
   // Global Website Visual Assets (Configurable via Admin Images Manager)
   siteImages?: WebsiteSiteImages;
+
+  // Homepage Section Layout Modules
+  homepageSections?: HomepageSectionsConfig;
 
   // Text content
   heroHeading: string;
