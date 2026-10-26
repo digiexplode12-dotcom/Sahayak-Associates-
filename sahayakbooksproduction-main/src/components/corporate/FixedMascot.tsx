@@ -15,7 +15,7 @@ export const FixedMascot: React.FC = () => {
   return (
     <div
       aria-hidden="true"
-      className="fixed bottom-0 left-2 sm:left-4 z-30 select-none pointer-events-none transition-opacity duration-300"
+      className="hidden sm:block fixed bottom-0 left-2 sm:left-4 z-30 select-none pointer-events-none transition-opacity duration-300"
     >
       <div className="relative inline-block">
         <span className="absolute -top-1 right-1 text-[11px] font-semibold text-stone-400/80 select-none">

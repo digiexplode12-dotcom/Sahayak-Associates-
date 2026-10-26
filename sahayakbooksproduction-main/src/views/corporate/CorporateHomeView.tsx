@@ -963,7 +963,7 @@ export const CorporateHomeView: React.FC = () => {
               <img
                 src={officeLibraryUrl}
                 alt="Sahayak Executive Library & Knowledge Hub"
-                className="w-full h-[380px] object-cover"
+                className="w-full h-[220px] sm:h-[300px] md:h-[380px] object-cover"
               />
             </div>
           )}

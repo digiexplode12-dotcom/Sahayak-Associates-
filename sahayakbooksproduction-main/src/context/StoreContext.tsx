@@ -35,6 +35,7 @@ import {
   INITIAL_MEDIA,
 } from '../data/initialData';
 import { getSiteImagesFromIndexedDB, saveSiteImagesToIndexedDB } from '../utils/siteImagesStorage';
+import { fetchSiteImagesFromR2, syncSiteImagesToR2 } from '../services/r2MediaService';
 
 interface StoreContextType {
   // Data
@@ -756,6 +757,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     []
   );
 
+  // Immediate Cloudflare R2 edge siteImages hydration for instant mobile & cross-device sync
+  useEffect(() => {
+    fetchSiteImagesFromR2()
+      .then((r2Images) => {
+        if (r2Images && typeof r2Images === 'object') {
+          setSettings((prev) => ({
+            ...prev,
+            siteImages: {
+              ...(prev.siteImages || {}),
+              ...r2Images,
+            },
+          }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Hydrate Public Catalog Data from Server Database on mount
   useEffect(() => {
     let isMounted = true;
@@ -863,9 +881,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               indexedSiteImages = await getSiteImagesFromIndexedDB();
             } catch {}
 
+            let r2SiteImages: any = null;
+            try {
+              r2SiteImages = await fetchSiteImagesFromR2();
+            } catch {}
+
             const mergedSiteImages = {
               ...(INITIAL_SETTINGS.siteImages || {}),
               ...(data[5].settings?.siteImages || {}),
+              ...(r2SiteImages || {}),
               ...(localSettings?.siteImages || {}),
               ...(indexedSiteImages || {}),
             };
@@ -884,6 +908,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             try { localStorage.setItem('sahayak_settings', JSON.stringify(finalSettings)); } catch {}
             if (mergedSiteImages) {
               saveSiteImagesToIndexedDB(mergedSiteImages).catch(() => {});
+              syncSiteImagesToR2(mergedSiteImages).catch(() => {});
             }
           }
 
@@ -2223,9 +2248,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Settings & Content
   const updateSettings = async (newSettings: Partial<WebsiteSettings>) => {
     try {
-      // 1. Immediately persist custom images to IndexedDB so they never get lost
+      // 1. Immediately persist custom images to IndexedDB and Cloudflare R2
       if (newSettings.siteImages) {
         await saveSiteImagesToIndexedDB(newSettings.siteImages);
+        syncSiteImagesToR2(newSettings.siteImages).catch(() => {});
       }
 
       const resData = await persistToServer('/api/settings', 'PUT', newSettings);

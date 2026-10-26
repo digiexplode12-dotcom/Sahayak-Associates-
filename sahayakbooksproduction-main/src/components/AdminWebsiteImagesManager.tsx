@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { WebsiteSiteImages } from '../types';
-import { uploadFileToR2 } from '../services/r2MediaService';
+import { uploadFileToR2, syncSiteImagesToR2 } from '../services/r2MediaService';
 import { compressImageToSafeDataUrl } from '../utils/imageUtils';
 import { saveSiteImagesToIndexedDB } from '../utils/siteImagesStorage';
 import {
@@ -223,6 +223,7 @@ export const AdminWebsiteImagesManager: React.FC = () => {
       };
       setSiteImages(updatedImages);
       await saveSiteImagesToIndexedDB(updatedImages);
+      await syncSiteImagesToR2(updatedImages);
       await updateSettings({
         siteImages: updatedImages,
         mainLogo: updatedImages.logo || settings.mainLogo,
@@ -240,8 +241,9 @@ export const AdminWebsiteImagesManager: React.FC = () => {
           [def.hiddenKey]: false,
         };
         setSiteImages(updatedImages);
-        // Automatically save immediately to IndexedDB and settings
+        // Automatically save immediately to IndexedDB, R2, and settings
         await saveSiteImagesToIndexedDB(updatedImages);
+        await syncSiteImagesToR2(updatedImages);
         await updateSettings({
           siteImages: updatedImages,
           mainLogo: updatedImages.logo || settings.mainLogo,
@@ -317,6 +319,7 @@ export const AdminWebsiteImagesManager: React.FC = () => {
     setIsSavingAll(true);
     try {
       await saveSiteImagesToIndexedDB(siteImages);
+      await syncSiteImagesToR2(siteImages);
       await updateSettings({
         siteImages,
         // Also keep legacy logo and footer fields in sync

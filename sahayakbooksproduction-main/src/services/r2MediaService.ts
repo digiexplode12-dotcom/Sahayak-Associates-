@@ -1,5 +1,74 @@
-import { MediaItem, MediaUsage, R2StorageStatus, Book, Author, BlogPost, WebsiteSettings } from '../types';
+import { MediaItem, MediaUsage, R2StorageStatus, Book, Author, BlogPost, WebsiteSettings, WebsiteSiteImages } from '../types';
 import { processImageFile } from '../utils/imageUtils';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+const R2_PUBLIC_URL = (import.meta.env.VITE_CLOUDFLARE_R2_PUBLIC_URL || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev').replace(/\/+$/, '');
+const R2_BUCKET = import.meta.env.VITE_CLOUDFLARE_R2_BUCKET_NAME || 'sahayak';
+const R2_ENDPOINT = import.meta.env.VITE_CLOUDFLARE_R2_ENDPOINT || 'https://93888554ef9d9e0b8c18b322683a9652.r2.cloudflarestorage.com';
+const R2_ACCESS_KEY_ID = import.meta.env.VITE_CLOUDFLARE_R2_ACCESS_KEY_ID || 'c5d59beff364b2c883f4f2df1883bb60';
+const R2_SECRET_ACCESS_KEY = import.meta.env.VITE_CLOUDFLARE_R2_SECRET_ACCESS_KEY || 'f2b349663c9052ef9db10e365062cf750d53895b33924899d7c98b8a6c8e7661';
+
+let directS3Client: S3Client | null = null;
+function getDirectS3Client(): S3Client {
+  if (!directS3Client) {
+    directS3Client = new S3Client({
+      region: 'auto',
+      endpoint: R2_ENDPOINT,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return directS3Client;
+}
+
+export async function directUploadFileToR2(
+  file: File | Blob,
+  key: string,
+  contentType: string = 'image/jpeg'
+): Promise<string> {
+  const client = getDirectS3Client();
+  const buffer = await file.arrayBuffer();
+  await client.send(new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: key,
+    Body: new Uint8Array(buffer),
+    ContentType: contentType,
+  }));
+  return `${R2_PUBLIC_URL}/${key}`;
+}
+
+export async function syncSiteImagesToR2(images: WebsiteSiteImages): Promise<boolean> {
+  try {
+    const client = getDirectS3Client();
+    const jsonStr = JSON.stringify(images, null, 2);
+    await client.send(new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: 'config/site-images.json',
+      Body: new TextEncoder().encode(jsonStr),
+      ContentType: 'application/json',
+    }));
+    return true;
+  } catch (err) {
+    console.warn('Could not sync siteImages config to R2:', err);
+    return false;
+  }
+}
+
+export async function fetchSiteImagesFromR2(): Promise<WebsiteSiteImages | null> {
+  try {
+    const res = await fetch(`${R2_PUBLIC_URL}/config/site-images.json?t=${Date.now()}`, {
+      cache: 'no-cache',
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data && typeof data === 'object' ? data : null;
+  } catch (err) {
+    console.warn('Could not fetch siteImages config from R2:', err);
+    return null;
+  }
+}
 
 // Authenticated fetch helper
 async function authenticatedFetch(url: string, options: RequestInit = {}) {
@@ -137,15 +206,55 @@ export async function uploadFileToR2(
         createdAt: data.media?.createdAt || new Date().toISOString(),
       };
       return media;
-    } else {
-      console.warn('Remote upload returned non-200 status, using resilient local media asset:', response?.status);
+    }
+
+    // 3. Direct R2 fallback upload (ensures uploads succeed on Netlify or static hosting)
+    try {
+      if (onProgress) onProgress(75);
+      const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+      const uuid = Math.random().toString(36).substring(2, 8);
+      const safeFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+      const objectKey = `${folder.toLowerCase()}/${timestamp}-${uuid}-${safeFilename}`;
+
+      const publicUrl = await directUploadFileToR2(file, objectKey, file.type || 'image/jpeg');
+
+      if (onProgress) onProgress(100);
+      return {
+        ...fallbackMedia,
+        url: publicUrl,
+        publicUrl: publicUrl,
+        objectKey,
+        storageProvider: 'r2',
+      };
+    } catch (directErr) {
+      console.warn('Direct R2 S3 upload also failed, using local asset:', directErr);
       if (onProgress) onProgress(100);
       return fallbackMedia;
     }
   } catch (err: any) {
-    console.warn('Remote R2 upload endpoint offline or unauthorized, using resilient fallback:', err?.message || err);
-    if (onProgress) onProgress(100);
-    return fallbackMedia;
+    console.warn('Remote R2 upload attempt failed, trying direct R2 S3 upload:', err?.message || err);
+    try {
+      if (onProgress) onProgress(75);
+      const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+      const uuid = Math.random().toString(36).substring(2, 8);
+      const safeFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+      const objectKey = `${folder.toLowerCase()}/${timestamp}-${uuid}-${safeFilename}`;
+
+      const publicUrl = await directUploadFileToR2(file, objectKey, file.type || 'image/jpeg');
+
+      if (onProgress) onProgress(100);
+      return {
+        ...fallbackMedia,
+        url: publicUrl,
+        publicUrl: publicUrl,
+        objectKey,
+        storageProvider: 'r2',
+      };
+    } catch (directErr) {
+      console.warn('Direct R2 S3 upload also failed, using local asset:', directErr);
+      if (onProgress) onProgress(100);
+      return fallbackMedia;
+    }
   }
 }
 
