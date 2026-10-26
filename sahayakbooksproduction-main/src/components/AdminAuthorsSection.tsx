@@ -38,8 +38,7 @@ import {
   FileText,
 } from 'lucide-react';
 
-const DEFAULT_AUTHOR_AVATAR =
-  'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png';
+const DEFAULT_AUTHOR_AVATAR = '';
 
 type EditorTab = 'basic' | 'media' | 'bio' | 'credentials' | 'social' | 'seo' | 'books';
 
@@ -568,12 +567,21 @@ export const AdminAuthorsSection: React.FC = () => {
                   return (
                     <tr key={author.id} className="hover:bg-stone-50 transition-colors">
                       <td className="p-3">
-                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C5A059] shadow-sm shrink-0 bg-stone-100">
-                          <img
-                            src={author.avatar || DEFAULT_AUTHOR_AVATAR}
-                            alt={author.name}
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C5A059] shadow-sm shrink-0 bg-stone-100 flex items-center justify-center">
+                          {author.avatar && !author.avatar.includes('unsplash.com') ? (
+                            <img
+                              src={author.avatar}
+                              alt={author.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <span className="font-serif font-bold text-xs text-[#0B192C]">
+                              {author.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="p-3">
@@ -861,12 +869,24 @@ export const AdminAuthorsSection: React.FC = () => {
                   </div>
 
                   {/* Avatar Preview */}
-                  <div className="w-40 h-40 mx-auto rounded-2xl overflow-hidden border-2 border-[#C5A059] shadow-md bg-white relative">
-                    <img
-                      src={previewAvatarUrl || editingAuthor.avatar || DEFAULT_AUTHOR_AVATAR}
-                      alt={editingAuthor.name || 'Author Avatar'}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-40 h-40 mx-auto rounded-2xl overflow-hidden border-2 border-[#C5A059] shadow-md bg-stone-100 relative flex items-center justify-center">
+                    {(previewAvatarUrl || editingAuthor.avatar) && !(previewAvatarUrl || editingAuthor.avatar)?.includes('unsplash.com') ? (
+                      <img
+                        src={previewAvatarUrl || editingAuthor.avatar}
+                        alt={editingAuthor.name || 'Author Avatar'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center p-4">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-[#0B192C] text-[#DEBF6A] flex items-center justify-center font-serif font-bold text-xl mb-2">
+                          {(editingAuthor.name || 'AU').slice(0, 2).toUpperCase()}
+                        </div>
+                        <span className="text-[11px] text-stone-500 font-medium">Monogram Avatar</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Controls for Avatar */}

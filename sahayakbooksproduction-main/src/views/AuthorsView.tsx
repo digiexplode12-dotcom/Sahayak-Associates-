@@ -50,15 +50,20 @@ export const AuthorsView: React.FC = () => {
             >
               <div className="text-center">
                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full mx-auto mb-4 overflow-hidden border-2 border-[#C5A059] shadow-lg group-hover:scale-105 transition-transform duration-300">
-                  <img
-                    src={author.avatar}
-                    alt={author.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png';
-                    }}
-                  />
+                  {author.avatar && !author.avatar.includes('unsplash.com') ? (
+                    <img
+                      src={author.avatar}
+                      alt={author.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#0B192C] via-[#102542] to-[#1B365D] flex items-center justify-center text-[#DEBF6A] font-serif font-bold text-2xl sm:text-3xl tracking-wider">
+                      {author.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                    </div>
+                  )}
                 </div>
 
                 <h2 className="font-serif text-xl font-bold text-[#0B192C] group-hover:text-[#C5A059] transition-colors">
@@ -119,15 +124,21 @@ export const AuthorDetailView: React.FC<{ slug: string }> = ({ slug }) => {
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
           <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden border-4 border-[#C5A059] shadow-2xl shrink-0">
-            <img
-              src={author.avatar}
-              alt={author.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png';
-              }}
-            />
+            {author.avatar && !author.avatar.includes('unsplash.com') ? (
+              <img
+                src={author.avatar}
+                alt={author.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-[#0B192C] via-[#102542] to-[#1B365D] flex flex-col items-center justify-center text-[#DEBF6A] font-serif font-bold text-4xl sm:text-5xl tracking-widest">
+                <span>{author.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}</span>
+                <span className="text-[10px] font-mono font-medium text-stone-300 uppercase tracking-widest mt-1">SAHAYAK FELLOW</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 flex-1 text-center md:text-left">

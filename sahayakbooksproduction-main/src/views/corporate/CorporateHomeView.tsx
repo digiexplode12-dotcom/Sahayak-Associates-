@@ -27,11 +27,11 @@ export const CorporateHomeView: React.FC = () => {
 
   const officeEntranceUrl = settings?.siteImages?.officeEntranceHidden
     ? null
-    : (settings?.siteImages?.officeEntrance || '/assets/corporate/office_entrance.jpg');
+    : (settings?.siteImages?.officeEntrance || null);
 
   const officeLibraryUrl = settings?.siteImages?.officeLibraryHidden
     ? null
-    : (settings?.siteImages?.officeLibrary || '/assets/corporate/office_library.jpg');
+    : (settings?.siteImages?.officeLibrary || null);
 
   // Carousel state for "How We Add Value"
   const [valueIndex, setValueIndex] = useState(0);
@@ -381,27 +381,92 @@ export const CorporateHomeView: React.FC = () => {
       )}
 
       {/* =========================================================================
-          SECTION 3: ABOUT US (STRICTLY BELOW THE FOLD ON INITIAL LOAD)
+          SECTION 3: ABOUT US (EXECUTIVE HERITAGE & INSTITUTIONAL TRUST)
           ========================================================================= */}
       {sections.aboutUs !== false && (
-        <section className="w-full bg-[#FAF7F2] pt-28 sm:pt-32 lg:pt-36 pb-20 border-b border-stone-200">
+        <section className="w-full bg-[#FAF7F2] pt-20 sm:pt-28 lg:pt-32 pb-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            {/* Left: Authentic Office Entrance Photograph */}
-            {officeEntranceUrl && (
-              <div className="lg:col-span-5 relative flex justify-center lg:justify-end">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white w-full max-w-[460px] transition-transform duration-300 hover:scale-[1.01]">
-                  <img
-                    src={officeEntranceUrl}
-                    alt="Sahayak Associates Office in Chandigarh"
-                    className="w-full h-auto object-cover"
-                  />
+            {/* Left: Institutional Heritage & Credibility Showcase */}
+            <div className="lg:col-span-5 relative flex justify-center lg:justify-end">
+              <div className="w-full max-w-[460px] rounded-3xl bg-gradient-to-br from-[#071526] via-[#0D1F36] to-[#071526] border border-[#C9A24E]/30 p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#C9A24E]/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="relative z-10 space-y-6">
+                  {/* Badge */}
+                  <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+                    <span className="text-[11px] font-mono font-semibold tracking-widest text-[#DEBF6A] uppercase">
+                      ESTD. 2017 · CHANDIGARH
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#C9A24E]/20 text-[#DEBF6A] text-[10px] font-mono font-bold tracking-wider">
+                      AMFI REG.
+                    </span>
+                  </div>
+
+                  {/* Core Value Statement */}
+                  <div>
+                    <h3 className="font-serif text-2xl font-bold text-white tracking-wide leading-snug">
+                      Your Personal <br />
+                      <span className="italic font-normal text-[#DEBF6A]">Family CFO</span>
+                    </h3>
+                    <p className="text-xs text-stone-300 mt-2 leading-relaxed">
+                      Institutional wealth stewardship tailored for entrepreneurs, professionals, and discerning families across India and the diaspora.
+                    </p>
+                  </div>
+
+                  {/* 3 Pillars of Stewardship */}
+                  <div className="space-y-3.5 pt-1">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-[#C9A24E]/20 border border-[#C9A24E]/40 flex items-center justify-center text-[#DEBF6A] text-xs font-bold shrink-0 mt-0.5">
+                        ✓
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-white tracking-wide">Fiduciary Discipline</div>
+                        <div className="text-[11px] text-stone-400">Zero-conflict guidance focused strictly on your family goals.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-[#C9A24E]/20 border border-[#C9A24E]/40 flex items-center justify-center text-[#DEBF6A] text-xs font-bold shrink-0 mt-0.5">
+                        ✓
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-white tracking-wide">Multi-Generational Legacy</div>
+                        <div className="text-[11px] text-stone-400">Structured wealth transfer, business succession &amp; estate continuity.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-[#C9A24E]/20 border border-[#C9A24E]/40 flex items-center justify-center text-[#DEBF6A] text-xs font-bold shrink-0 mt-0.5">
+                        ✓
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-white tracking-wide">Dynamic Portfolio Reviews</div>
+                        <div className="text-[11px] text-stone-400">Review &amp; Rebalance Regularly (R4R) across shifting cycles.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Institutional Stats Strip */}
+                  <div className="pt-4 border-t border-stone-800 flex items-center justify-between text-center">
+                    <div>
+                      <div className="font-serif font-bold text-lg text-[#DEBF6A]">₹500 Cr+</div>
+                      <div className="text-[10px] font-mono text-stone-400 uppercase tracking-wider">AUM Under Care</div>
+                    </div>
+                    <div className="h-8 w-px bg-stone-800" />
+                    <div>
+                      <div className="font-serif font-bold text-lg text-white">1,500+</div>
+                      <div className="text-[10px] font-mono text-stone-400 uppercase tracking-wider">Families</div>
+                    </div>
+                    <div className="h-8 w-px bg-stone-800" />
+                    <div>
+                      <div className="font-serif font-bold text-lg text-[#DEBF6A]">98%</div>
+                      <div className="text-[10px] font-mono text-stone-400 uppercase tracking-wider">Retention</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Right: Copy & Vision */}
-            <div className={`${officeEntranceUrl ? 'lg:col-span-7' : 'lg:col-span-12 max-w-4xl mx-auto'} space-y-6`}>
+            <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
                 <span className="w-8 h-px bg-[#C9A24E]" />
                 <span>ABOUT US</span>
@@ -426,12 +491,21 @@ export const CorporateHomeView: React.FC = () => {
                 </p>
               </div>
 
+              <div className="p-4 rounded-xl bg-white border-l-4 border-[#C9A24E] shadow-sm">
+                <p className="text-xs sm:text-sm text-stone-700 italic font-serif leading-relaxed">
+                  &ldquo;Our purpose is not merely to distribute financial products, but to serve as a lifelong fiduciary anchor for families navigating the compounding journey.&rdquo;
+                </p>
+                <span className="block text-[11px] font-mono font-semibold text-[#071526] mt-2 uppercase tracking-wider">
+                  — Sandeep Sahni, Founder &amp; Managing Director
+                </span>
+              </div>
+
               <div className="pt-2">
                 <button
                   onClick={() => navigate('/about')}
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[#071526] hover:text-[#C9A24E] transition-colors group"
                 >
-                  <span>Read our story</span>
+                  <span>Read our complete story</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -957,16 +1031,31 @@ export const CorporateHomeView: React.FC = () => {
             </div>
           </div>
 
-          {/* Authentic Library & Study Photograph */}
-          {officeLibraryUrl && (
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white max-h-[420px]">
-              <img
-                src={officeLibraryUrl}
-                alt="Sahayak Executive Library & Knowledge Hub"
-                className="w-full h-[220px] sm:h-[300px] md:h-[380px] object-cover"
-              />
+          {/* Executive Knowledge Hub Highlight Banner */}
+          <div className="relative rounded-2xl bg-[#071526] text-white p-6 sm:p-8 border border-[#C9A24E]/30 overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#C9A24E]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="space-y-2 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold tracking-widest text-[#DEBF6A] uppercase">
+                  <span>CURATED FINANCIAL WISDOM &amp; RESEARCH</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-serif font-bold text-white">
+                  Demystifying Finance. Empowering Generational Growth.
+                </h3>
+                <p className="text-xs sm:text-sm text-stone-300 max-w-2xl leading-relaxed">
+                  Explore in-depth market commentaries, behavioral finance insights, and actionable wealth blueprints curated by seasoned practitioners.
+                </p>
+              </div>
+              <div className="shrink-0 flex items-center gap-3">
+                <button
+                  onClick={() => navigate('/blogs')}
+                  className="px-5 py-2.5 rounded-xl bg-[#C9A24E] hover:bg-[#DEBF6A] text-[#071526] text-xs font-bold tracking-wide transition-all shadow-md hover:shadow-lg"
+                >
+                  Read Latest Articles
+                </button>
+              </div>
             </div>
-          )}
+          </div>
 
           {/* 3 Navigation Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1132,15 +1221,20 @@ export const CorporateHomeView: React.FC = () => {
                         onClick={() => navigate(`/authors/${auth.slug}`)}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200/90 hover:border-[#C9A24E] shadow-sm transition-all group cursor-pointer"
                       >
-                        <img
-                          src={auth.avatar}
-                          alt={auth.name}
-                          className="w-6 h-6 rounded-full object-cover border border-[#C9A24E]"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png';
-                          }}
-                        />
+                        {auth.avatar && !auth.avatar.includes('unsplash.com') ? (
+                          <img
+                            src={auth.avatar}
+                            alt={auth.name}
+                            className="w-6 h-6 rounded-full object-cover border border-[#C9A24E]"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span className="w-6 h-6 rounded-full bg-[#071526] text-[#DEBF6A] text-[10px] font-bold font-serif flex items-center justify-center border border-[#C9A24E]">
+                            {auth.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                          </span>
+                        )}
                         <span className="text-xs font-bold text-[#071526] group-hover:text-[#C9A24E] transition-colors">
                           {auth.name}
                         </span>

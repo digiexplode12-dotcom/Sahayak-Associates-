@@ -274,11 +274,20 @@ export const HomeView: React.FC = () => {
                 >
                   <div className="text-center">
                     <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-2 border-[#C5A059] shadow-md group-hover:scale-105 transition-transform">
-                      <img
-                        src={author.avatar}
-                        alt={author.name}
-                        className="w-full h-full object-cover"
-                      />
+                      {author.avatar && !author.avatar.includes('unsplash.com') ? (
+                        <img
+                          src={author.avatar}
+                          alt={author.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#0B192C] via-[#102542] to-[#1B365D] flex items-center justify-center text-[#DEBF6A] font-serif font-bold text-xl tracking-wider">
+                          {author.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                        </div>
+                      )}
                     </div>
                     <h3 className="font-serif text-lg font-bold text-[#0B192C] group-hover:text-[#C5A059] transition-colors">
                       {author.name}
@@ -342,7 +351,7 @@ export const HomeView: React.FC = () => {
                 </div>
 
                 <div className="pt-4 mt-6 border-t border-stone-100 flex items-center gap-3">
-                  {rev.userAvatar ? (
+                  {rev.userAvatar && !rev.userAvatar.includes('unsplash.com') ? (
                     <img
                       src={rev.userAvatar}
                       alt={rev.userName}

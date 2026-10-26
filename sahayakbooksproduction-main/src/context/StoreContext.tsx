@@ -311,7 +311,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('sahayak_authors');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((a: Author) => ({
+            ...a,
+            avatar: a.avatar && a.avatar.includes('images.unsplash.com') ? '' : a.avatar,
+            coverImage: a.coverImage && a.coverImage.includes('images.unsplash.com') ? '' : a.coverImage,
+          }));
+        }
       }
     } catch {}
     return INITIAL_AUTHORS;
@@ -333,7 +339,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('sahayak_reviews');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((r: Review) => ({
+            ...r,
+            userAvatar: r.userAvatar && r.userAvatar.includes('images.unsplash.com') ? '' : r.userAvatar,
+          }));
+        }
       }
     } catch {}
     return INITIAL_REVIEWS;
@@ -823,16 +834,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const serverAuthorIds = new Set(data[1].authors.map((a: Author) => a.id));
             const mergedAuthors = data[1].authors.map((sa: Author) => {
               const la = localAuthors.find((l) => l.id === sa.id || l.slug === sa.slug);
+              let authorToUse = sa;
               if (la && la.updatedAt) {
                 if (!sa.updatedAt || new Date(la.updatedAt) >= new Date(sa.updatedAt)) {
-                  return { ...sa, ...la };
+                  authorToUse = { ...sa, ...la };
                 }
               } else if (la) {
-                return { ...sa, ...la };
+                authorToUse = { ...sa, ...la };
               }
-              return sa;
+              return {
+                ...authorToUse,
+                avatar: authorToUse.avatar && authorToUse.avatar.includes('images.unsplash.com') ? '' : authorToUse.avatar,
+                coverImage: authorToUse.coverImage && authorToUse.coverImage.includes('images.unsplash.com') ? '' : authorToUse.coverImage,
+              };
             });
-            const localOnlyAuthors = localAuthors.filter((la) => !serverAuthorIds.has(la.id) && !data[1].authors.some((sa: Author) => sa.slug === la.slug));
+            const localOnlyAuthors = localAuthors
+              .filter((la) => !serverAuthorIds.has(la.id) && !data[1].authors.some((sa: Author) => sa.slug === la.slug))
+              .map(la => ({
+                ...la,
+                avatar: la.avatar && la.avatar.includes('images.unsplash.com') ? '' : la.avatar,
+                coverImage: la.coverImage && la.coverImage.includes('images.unsplash.com') ? '' : la.coverImage,
+              }));
             const finalAuthors = [...mergedAuthors, ...localOnlyAuthors];
             setAuthors(finalAuthors);
             try { localStorage.setItem('sahayak_authors', JSON.stringify(finalAuthors)); } catch {}
@@ -917,7 +939,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const localSaved = localStorage.getItem('sahayak_reviews');
             let localReviews: Review[] = [];
             try { localReviews = localSaved ? JSON.parse(localSaved) : []; } catch {}
-            const finalReviews = localReviews.length > 0 ? localReviews : data[6].reviews;
+            const rawReviews = localReviews.length > 0 ? localReviews : data[6].reviews;
+            const finalReviews = rawReviews.map((r: Review) => ({
+              ...r,
+              userAvatar: r.userAvatar && r.userAvatar.includes('images.unsplash.com') ? '' : r.userAvatar,
+            }));
             setReviews(finalReviews);
             try { localStorage.setItem('sahayak_reviews', JSON.stringify(finalReviews)); } catch {}
           }

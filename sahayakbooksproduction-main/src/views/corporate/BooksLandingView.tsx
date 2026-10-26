@@ -254,7 +254,7 @@ export const BooksLandingView: React.FC = () => {
                       alt="Sandeep Sahni — Author & Founder"
                       className="w-full h-auto object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800';
+                        (e.target as HTMLImageElement).src = '/sandeep_sahni.jpg';
                       }}
                     />
                   </div>

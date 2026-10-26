@@ -4,9 +4,7 @@ import { useStore } from '../../context/StoreContext';
 export const GurukulView: React.FC = () => {
   const { navigate, blogs, settings } = useStore();
 
-  const officeLibraryUrl = settings?.siteImages?.officeLibraryHidden
-    ? null
-    : (settings?.siteImages?.officeLibrary || '/assets/corporate/office_library.jpg');
+  const officeLibraryUrl = null;
 
   const curatedReadingList = [
     {
@@ -48,7 +46,7 @@ export const GurukulView: React.FC = () => {
         </div>
       </section>
 
-      {/* Philosophy & Library Photograph */}
+      {/* Philosophy & Executive Wisdom Showcase */}
       <section className="py-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -78,17 +76,38 @@ export const GurukulView: React.FC = () => {
               </div>
             </div>
 
-            {officeLibraryUrl && (
-              <div className="lg:col-span-6">
-                <div className="rounded-2xl overflow-hidden shadow-xl border-4 border-white max-h-[380px]">
-                  <img
-                    src={officeLibraryUrl}
-                    alt="Sahayak Executive Knowledge Library"
-                    className="w-full h-[360px] object-cover"
-                  />
+            <div className="lg:col-span-6">
+              <div className="rounded-3xl bg-gradient-to-br from-[#071526] via-[#0D1F36] to-[#071526] border border-[#C9A24E]/30 p-8 text-white shadow-xl space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-stone-800">
+                  <span className="text-[11px] font-mono tracking-widest text-[#DEBF6A] uppercase">SAHAYAK GURUKUL DESK</span>
+                  <span className="text-xs text-[#DEBF6A]">✦ ✦ ✦</span>
+                </div>
+                <h3 className="font-serif text-xl font-bold text-white">Three Pillars of Investor Wisdom</h3>
+                <div className="space-y-3">
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+                    <span className="text-lg">📈</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#DEBF6A]">Compounding &amp; Time Horizon</h4>
+                      <p className="text-[11px] text-stone-300 mt-0.5">Understanding that wealth is built through patience and staying invested across cycles.</p>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+                    <span className="text-lg">🧠</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#DEBF6A]">Behavioral &amp; Emotional Discipline</h4>
+                      <p className="text-[11px] text-stone-300 mt-0.5">Conquering greed and fear — avoiding the costly instinct to time the market.</p>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+                    <span className="text-lg">🛡️</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#DEBF6A]">Asset Allocation as Paramount</h4>
+                      <p className="text-[11px] text-stone-300 mt-0.5">Evaluating Risk PCR (Preference, Capacity, Requirement) to construct resilient portfolios.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>
