@@ -128,14 +128,19 @@ export async function uploadFileToR2(
   }
 
   const safeFilename = file.name.replace(/\.[^/.]+$/, '');
+  const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+  const uuid = Math.random().toString(36).substring(2, 8);
+  const cleanFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+  const objectKey = `${folder.toLowerCase()}/${timestamp}-${uuid}-${cleanFilename}`;
+
   const fallbackMedia: MediaItem = {
-    id: `med-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    id: `med-${Date.now()}-${uuid}`,
     name: safeFilename,
     url: dataUrl,
     publicUrl: dataUrl,
     fileName: file.name,
     originalFileName: file.name,
-    objectKey: `local/${file.name}`,
+    objectKey,
     folder: folder.toLowerCase() as any,
     size: humanSize,
     fileSize: humanSize,
@@ -143,39 +148,33 @@ export async function uploadFileToR2(
     width,
     height,
     mimeType: file.type || 'image/jpeg',
-    storageProvider: 'local',
+    storageProvider: 'r2',
     altText: altText || file.name,
     caption: caption || '',
     date: new Date().toISOString().split('T')[0],
     createdAt: new Date().toISOString(),
   };
 
-  // 2. Attempt remote server upload (Cloudflare R2 via /api/media/upload)
+  // 2. Primary: Direct S3 upload to Cloudflare R2 bucket (sahayak)
   try {
-    if (onProgress) onProgress(45);
+    if (onProgress) onProgress(50);
+    const publicUrl = await directUploadFileToR2(file, objectKey, file.type || 'image/jpeg');
+    if (onProgress) onProgress(100);
 
-    // Try FormData upload first (compatible with Cloudflare Workers request.formData())
-    let response: Response | null = null;
+    return {
+      ...fallbackMedia,
+      url: publicUrl,
+      publicUrl: publicUrl,
+      objectKey,
+      storageProvider: 'r2',
+    };
+  } catch (directErr: any) {
+    console.warn('[R2 Direct Upload] Direct S3 upload failed, trying API proxy:', directErr?.message || directErr);
+    
+    // 3. Fallback: Cloudflare Worker API proxy
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder', folder.toLowerCase());
-      if (altText) formData.append('altText', altText);
-      if (caption) formData.append('caption', caption);
-      if (uploadedBy) formData.append('uploadedBy', uploadedBy);
-
-      response = await authenticatedFetch('/api/media/upload', {
-        method: 'POST',
-        body: formData,
-      });
-    } catch (formErr) {
-      console.warn('FormData upload attempt failed, trying JSON payload:', formErr);
-    }
-
-    // If FormData failed or wasn't supported, try JSON fallback
-    if (!response || !response.ok) {
-      if (onProgress) onProgress(65);
-      response = await authenticatedFetch('/api/media/upload', {
+      if (onProgress) onProgress(70);
+      const response = await fetch('/api/media/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -190,71 +189,25 @@ export async function uploadFileToR2(
           uploadedBy,
         }),
       });
+
+      if (response && response.ok) {
+        const data = await response.json();
+        if (onProgress) onProgress(100);
+        return {
+          ...fallbackMedia,
+          ...data.media,
+          dimensions,
+          width,
+          height,
+          storageProvider: 'r2',
+        };
+      }
+    } catch (proxyErr) {
+      console.warn('API proxy upload also failed, using optimized local asset:', proxyErr);
     }
 
-    if (response && response.ok) {
-      const data = await response.json();
-      if (onProgress) onProgress(100);
-
-      const media: MediaItem = {
-        ...fallbackMedia,
-        ...data.media,
-        dimensions: dimensions,
-        width,
-        height,
-        date: data.media?.date || new Date().toISOString().split('T')[0],
-        createdAt: data.media?.createdAt || new Date().toISOString(),
-      };
-      return media;
-    }
-
-    // 3. Direct R2 fallback upload (ensures uploads succeed on Netlify or static hosting)
-    try {
-      if (onProgress) onProgress(75);
-      const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
-      const uuid = Math.random().toString(36).substring(2, 8);
-      const safeFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
-      const objectKey = `${folder.toLowerCase()}/${timestamp}-${uuid}-${safeFilename}`;
-
-      const publicUrl = await directUploadFileToR2(file, objectKey, file.type || 'image/jpeg');
-
-      if (onProgress) onProgress(100);
-      return {
-        ...fallbackMedia,
-        url: publicUrl,
-        publicUrl: publicUrl,
-        objectKey,
-        storageProvider: 'r2',
-      };
-    } catch (directErr) {
-      console.warn('Direct R2 S3 upload also failed, using local asset:', directErr);
-      if (onProgress) onProgress(100);
-      return fallbackMedia;
-    }
-  } catch (err: any) {
-    console.warn('Remote R2 upload attempt failed, trying direct R2 S3 upload:', err?.message || err);
-    try {
-      if (onProgress) onProgress(75);
-      const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
-      const uuid = Math.random().toString(36).substring(2, 8);
-      const safeFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
-      const objectKey = `${folder.toLowerCase()}/${timestamp}-${uuid}-${safeFilename}`;
-
-      const publicUrl = await directUploadFileToR2(file, objectKey, file.type || 'image/jpeg');
-
-      if (onProgress) onProgress(100);
-      return {
-        ...fallbackMedia,
-        url: publicUrl,
-        publicUrl: publicUrl,
-        objectKey,
-        storageProvider: 'r2',
-      };
-    } catch (directErr) {
-      console.warn('Direct R2 S3 upload also failed, using local asset:', directErr);
-      if (onProgress) onProgress(100);
-      return fallbackMedia;
-    }
+    if (onProgress) onProgress(100);
+    return fallbackMedia;
   }
 }
 

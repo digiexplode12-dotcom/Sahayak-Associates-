@@ -5,7 +5,9 @@ import { Award, ShieldCheck, Users, Target, Compass, ArrowRight, BookOpen } from
 export const AboutView: React.FC = () => {
   const { navigate, settings, authors = [] } = useStore();
 
-  const officeEntranceUrl = null;
+  const officeEntranceUrl = settings?.siteImages?.officeEntranceHidden
+    ? null
+    : (settings?.siteImages?.officeEntrance || '/assets/corporate/office_entrance.jpg');
 
   const sandeepAuthor = authors.find(
     (a) => a.id === 'author-sandeep-sahni' || a.slug === 'sandeep-sahni' || a.name.toLowerCase().includes('sandeep')
@@ -34,71 +36,37 @@ export const AboutView: React.FC = () => {
         </div>
       </section>
 
-      {/* Main Story & Institutional Heritage Showcase */}
+      {/* Main Story & Office Photograph */}
       <section className="py-20 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left: Institutional Heritage Card */}
-            <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="w-full max-w-[460px] rounded-3xl bg-gradient-to-br from-[#071526] via-[#0D1F36] to-[#071526] border border-[#C9A24E]/30 p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#C9A24E]/10 rounded-full blur-2xl pointer-events-none" />
-                <div className="relative z-10 space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-stone-800">
-                    <span className="text-[11px] font-mono font-semibold tracking-widest text-[#DEBF6A] uppercase">
-                      ESTD. 2017 · CHANDIGARH
+            {/* Left: Office Entrance Image */}
+            {officeEntranceUrl && (
+              <div className="lg:col-span-5 flex justify-center lg:justify-end">
+                <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-4 border-white w-full max-w-[460px] transition-transform duration-300 hover:scale-[1.01] group">
+                  <img
+                    src={officeEntranceUrl}
+                    alt="Sahayak Associates Office in Chandigarh"
+                    className="w-full h-[320px] sm:h-[420px] object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/assets/corporate/office_entrance.jpg';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <span className="text-[10px] font-mono tracking-widest text-[#DEBF6A] uppercase">
+                      EST. 2017 · CHANDIGARH
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#C9A24E]/20 text-[#DEBF6A] text-[10px] font-mono font-bold tracking-wider">
-                      AMFI REG.
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="font-serif text-2xl font-bold text-white tracking-wide leading-snug">
-                      Institutional Fiduciary <br />
-                      <span className="italic font-normal text-[#DEBF6A]">Family CFO</span>
-                    </h3>
-                    <p className="text-xs text-stone-300 mt-2 leading-relaxed">
-                      A disciplined partnership model aligning investment strategy with the human reality of life milestones.
+                    <p className="text-sm font-serif font-bold text-white mt-0.5">
+                      Sahayak Associates Corporate Office
                     </p>
-                  </div>
-
-                  <div className="space-y-3 pt-1">
-                    <div className="flex items-center gap-3 text-xs text-stone-300">
-                      <span className="text-[#DEBF6A] font-bold">✓</span>
-                      <span>AMFI-Registered Mutual Fund Distributor</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-stone-300">
-                      <span className="text-[#DEBF6A] font-bold">✓</span>
-                      <span>Review &amp; Rebalance Regularly (R4R) Discipline</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-stone-300">
-                      <span className="text-[#DEBF6A] font-bold">✓</span>
-                      <span>Multi-Generational Wealth Continuity</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-stone-800 flex items-center justify-between text-center">
-                    <div>
-                      <div className="font-serif font-bold text-lg text-[#DEBF6A]">11+</div>
-                      <div className="text-[10px] font-mono text-stone-400 uppercase tracking-wider">Years Exp.</div>
-                    </div>
-                    <div className="h-8 w-px bg-stone-800" />
-                    <div>
-                      <div className="font-serif font-bold text-lg text-white">1,500+</div>
-                      <div className="text-[10px] font-mono text-stone-400 uppercase tracking-wider">Families</div>
-                    </div>
-                    <div className="h-8 w-px bg-stone-800" />
-                    <div>
-                      <div className="font-serif font-bold text-lg text-[#DEBF6A]">₹500 Cr+</div>
-                      <div className="text-[10px] font-mono text-stone-400 uppercase tracking-wider">AUM Care</div>
-                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Right: Story & Ikigai */}
-            <div className="lg:col-span-7 space-y-6">
+            <div className={`${officeEntranceUrl ? 'lg:col-span-7' : 'lg:col-span-12 max-w-4xl mx-auto'} space-y-6`}>
               <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest text-[#C9A24E] uppercase">
                 <span>OUR STORY &amp; ETHOS</span>
               </div>

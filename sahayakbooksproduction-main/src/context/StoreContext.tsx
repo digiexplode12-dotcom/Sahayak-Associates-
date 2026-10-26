@@ -773,13 +773,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchSiteImagesFromR2()
       .then((r2Images) => {
         if (r2Images && typeof r2Images === 'object') {
-          setSettings((prev) => ({
-            ...prev,
-            siteImages: {
+          setSettings((prev) => {
+            const nextImages = {
               ...(prev.siteImages || {}),
               ...r2Images,
-            },
-          }));
+            };
+            const next = {
+              ...prev,
+              siteImages: nextImages,
+            };
+            try {
+              localStorage.setItem('sahayak_settings', JSON.stringify(next));
+            } catch {}
+            return next;
+          });
         }
       })
       .catch(() => {});
@@ -911,9 +918,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const mergedSiteImages = {
               ...(INITIAL_SETTINGS.siteImages || {}),
               ...(data[5].settings?.siteImages || {}),
-              ...(r2SiteImages || {}),
               ...(localSettings?.siteImages || {}),
               ...(indexedSiteImages || {}),
+              ...(r2SiteImages || {}),
             };
 
             const finalSettings = {
