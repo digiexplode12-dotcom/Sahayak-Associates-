@@ -27,11 +27,11 @@ export const CorporateHomeView: React.FC = () => {
 
   const officeEntranceUrl = settings?.siteImages?.officeEntranceHidden
     ? null
-    : (settings?.siteImages?.officeEntrance || '/assets/corporate/office_entrance.jpg');
+    : (settings?.siteImages?.officeEntrance || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeEntrance_permanent.webp');
 
   const officeLibraryUrl = settings?.siteImages?.officeLibraryHidden
     ? null
-    : (settings?.siteImages?.officeLibrary || '/assets/corporate/office_library.jpg');
+    : (settings?.siteImages?.officeLibrary || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeLibrary_permanent.webp');
 
   // Carousel state for "How We Add Value"
   const [valueIndex, setValueIndex] = useState(0);

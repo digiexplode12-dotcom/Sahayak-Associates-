@@ -11,7 +11,7 @@ export const CorporateFooter: React.FC = () => {
 
   const footerLogoSrc = settings?.siteImages?.footerLogoHidden
     ? null
-    : (settings?.siteImages?.footerLogo || settings?.siteImages?.logo || settings?.footerLogo || settings?.mainLogo || '/assets/corporate/sahayak_logo.png');
+    : (settings?.siteImages?.footerLogo || settings?.siteImages?.logo || settings?.footerLogo || settings?.mainLogo || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/footerLogo_permanent.webp');
 
   return (
     <footer className="w-full bg-[#050F1E] text-stone-300 border-t border-stone-800/80 pt-16 pb-12">

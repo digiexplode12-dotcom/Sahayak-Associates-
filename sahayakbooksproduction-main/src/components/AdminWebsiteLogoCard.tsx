@@ -18,7 +18,7 @@ import {
   Layout,
   ExternalLink,
 } from 'lucide-react';
-import { uploadFileToR2 } from '../services/r2MediaService';
+import { uploadFileToR2, persistCustomImageUrl } from '../services/r2MediaService';
 import { useStore } from '../context/StoreContext';
 import { WebsiteSettings } from '../types';
 
@@ -167,14 +167,24 @@ export const AdminWebsiteLogoCard: React.FC<AdminWebsiteLogoCardProps> = ({
         storageProvider: uploaded.storageProvider || 'cloudflare-r2',
       });
 
+      let permanentLogo = effectiveUrl;
+      if (permanentLogo.startsWith('data:') || permanentLogo.startsWith('http')) {
+        permanentLogo = await persistCustomImageUrl(permanentLogo, 'logo');
+      }
+
       // Apply to settings
       onChange({
-        mainLogo: effectiveUrl,
-        logoUrl: effectiveUrl,
-        darkLogo: effectiveUrl,
+        mainLogo: permanentLogo,
+        logoUrl: permanentLogo,
+        darkLogo: permanentLogo,
+        siteImages: {
+          ...(settings.siteImages || {}),
+          logo: permanentLogo,
+          logoHidden: false,
+        },
       });
 
-      showToast('New website logo uploaded and applied successfully!');
+      showToast('New website logo permanently uploaded and applied!');
     } catch (err: any) {
       setImageError(err.message || 'Error uploading logo file');
     } finally {
@@ -185,18 +195,29 @@ export const AdminWebsiteLogoCard: React.FC<AdminWebsiteLogoCardProps> = ({
   };
 
   // Apply manual URL
-  const handleApplyUrl = () => {
+  const handleApplyUrl = async () => {
     if (!urlInput.trim()) {
       setImageError('Please enter a valid image URL');
       return;
     }
     setImageError(null);
+    showToast('Securing logo URL permanently to Cloudflare R2...');
+    let permanentUrl = urlInput.trim();
+    try {
+      permanentUrl = await persistCustomImageUrl(permanentUrl, 'logo');
+    } catch {}
+
     onChange({
-      mainLogo: urlInput.trim(),
-      logoUrl: urlInput.trim(),
-      darkLogo: urlInput.trim(),
+      mainLogo: permanentUrl,
+      logoUrl: permanentUrl,
+      darkLogo: permanentUrl,
+      siteImages: {
+        ...(settings.siteImages || {}),
+        logo: permanentUrl,
+        logoHidden: false,
+      },
     });
-    showToast('Logo URL applied');
+    showToast('Logo permanently secured & applied!');
   };
 
   // Remove/Clear logo
@@ -205,6 +226,10 @@ export const AdminWebsiteLogoCard: React.FC<AdminWebsiteLogoCardProps> = ({
       mainLogo: '',
       logoUrl: '',
       darkLogo: '',
+      siteImages: {
+        ...(settings.siteImages || {}),
+        logo: '',
+      },
     });
     setUrlInput('');
     showToast('Custom logo removed. Default brand typography will display.');
@@ -218,6 +243,11 @@ export const AdminWebsiteLogoCard: React.FC<AdminWebsiteLogoCardProps> = ({
       darkLogo: currentLogo,
       logoHeight: currentHeight,
       logoPadding: currentPadding,
+      siteImages: {
+        ...(settings.siteImages || {}),
+        logo: currentLogo || settings.siteImages?.logo,
+        logoHidden: false,
+      },
     });
     setSaveSuccessMsg(true);
     showToast('Brand logo settings saved and published live site-wide!');

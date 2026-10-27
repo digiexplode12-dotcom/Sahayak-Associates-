@@ -1,7 +1,12 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
+
+const __filename = typeof import.meta?.url === 'string' ? fileURLToPath(import.meta.url) : (typeof __filename !== 'undefined' ? __filename : '');
+const __dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(__filename);
 import {
   isR2Configured,
   getSafeMaskedStatus,
@@ -10,6 +15,8 @@ import {
   deleteObjectFromR2,
   createPresignedUploadUrl,
   ALLOWED_MIME_TYPES,
+  syncSiteImagesToR2Direct,
+  persistBase64OrRemoteUrlToR2,
 } from './server/r2';
 import { getDatabase, saveDatabase } from './server/db';
 import {
@@ -1020,38 +1027,65 @@ async function startServer() {
     res.json({ success: true, settings: db.settings });
   });
 
-  app.put('/api/settings', (req, res) => {
+  app.put('/api/settings', async (req, res) => {
     try {
       const db = getDatabase();
-      const oldSettings = db.settings || {};
-      const mergedSiteImages = {
-        ...(oldSettings.siteImages || {}),
-        ...(req.body.siteImages || {}),
-      };
+      const oldSettings: any = db.settings || {};
+      const incomingImages = req.body.siteImages || {};
+      const persistedImages: any = { ...(oldSettings.siteImages || {}) };
+
+      // Ensure every image is converted to a permanent unexpiring URL (handles base64 or temporary external links)
+      for (const [key, val] of Object.entries(incomingImages)) {
+        if (key.endsWith('Hidden')) {
+          persistedImages[key] = Boolean(val);
+        } else if (typeof val === 'string' && val.trim().length > 0) {
+          persistedImages[key] = await persistBase64OrRemoteUrlToR2(val, key);
+        }
+      }
+
+      // Also persist mainLogo and footerLogo if provided
+      let finalMainLogo = req.body.mainLogo || req.body.logoUrl || oldSettings.mainLogo;
+      if (finalMainLogo && (finalMainLogo.startsWith('data:') || finalMainLogo.startsWith('http'))) {
+        finalMainLogo = await persistBase64OrRemoteUrlToR2(finalMainLogo, 'main_logo');
+      }
+      if (persistedImages.logo) {
+        finalMainLogo = persistedImages.logo;
+      }
+
+      let finalFooterLogo = req.body.footerLogo || oldSettings.footerLogo;
+      if (finalFooterLogo && (finalFooterLogo.startsWith('data:') || finalFooterLogo.startsWith('http'))) {
+        finalFooterLogo = await persistBase64OrRemoteUrlToR2(finalFooterLogo, 'footer_logo');
+      }
+      if (persistedImages.footerLogo) {
+        finalFooterLogo = persistedImages.footerLogo;
+      }
+
       const newSettings = {
         ...oldSettings,
         ...req.body,
-        siteImages: mergedSiteImages,
+        mainLogo: finalMainLogo,
+        footerLogo: finalFooterLogo,
+        logoUrl: finalMainLogo,
+        siteImages: persistedImages,
       };
-      
+
+      // Direct R2 bucket sync of config/site-images.json
+      await syncSiteImagesToR2Direct(persistedImages);
+
       const auditLogs = [...(db.auditLogs || [])];
-      const newLogo = req.body.logoUrl || req.body.mainLogo;
-      const oldLogo = (oldSettings as any).logoUrl || (oldSettings as any).mainLogo;
-      if (newLogo && oldLogo !== newLogo) {
-        auditLogs.unshift({
-          id: `log-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          userName: req.body.updatedBy || 'Administrative Officer',
-          userRole: 'ADMIN',
-          action: 'Brand Logo Updated',
-          resource: 'Website Settings',
-          details: `Updated primary website logo asset (Height: ${newSettings.logoHeight || 40}px, Padding: ${newSettings.logoPadding || 0}px)`,
-        });
-      }
+      auditLogs.unshift({
+        id: `log-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        userName: req.body.updatedBy || 'Administrative Officer',
+        userRole: 'ADMIN',
+        action: 'Website Settings & Images Persisted',
+        resource: 'Website Settings',
+        details: 'Images and branding saved permanently to Cloudflare R2 and database.',
+      });
 
       const savePayload: any = { settings: newSettings, auditLogs };
-      if (req.body.siteImages?.founderPortrait) {
-        const portrait = req.body.siteImages.founderPortrait;
+      if (persistedImages.founderPortrait) {
+        const portrait = persistedImages.founderPortrait;
         savePayload.authors = (db.authors || []).map((a: any) =>
           a.id === 'author-sandeep-sahni' || a.slug === 'sandeep-sahni' || (a.name && a.name.toLowerCase().includes('sandeep'))
             ? { ...a, avatar: portrait, updatedAt: new Date().toISOString() }
@@ -1061,6 +1095,49 @@ async function startServer() {
 
       saveDatabase(savePayload);
       res.json({ success: true, settings: newSettings });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Dedicated endpoint for persisting any image asset permanently to R2 & local backup
+  app.post('/api/site-images/persist', async (req, res) => {
+    try {
+      const { images } = req.body;
+      if (!images || typeof images !== 'object') {
+        res.status(400).json({ success: false, error: 'images object required' });
+        return;
+      }
+
+      const db = getDatabase();
+      const currentSiteImages = db.settings?.siteImages || {};
+      const updatedSiteImages: any = { ...currentSiteImages };
+
+      for (const [key, val] of Object.entries(images)) {
+        if (key.endsWith('Hidden')) {
+          updatedSiteImages[key] = Boolean(val);
+        } else if (typeof val === 'string' && val.trim().length > 0) {
+          updatedSiteImages[key] = await persistBase64OrRemoteUrlToR2(val, key);
+        }
+      }
+
+      // Sync to R2
+      await syncSiteImagesToR2Direct(updatedSiteImages);
+
+      // Save to database
+      const updatedSettings = {
+        ...(db.settings || {}),
+        siteImages: updatedSiteImages,
+        mainLogo: updatedSiteImages.logo || db.settings?.mainLogo,
+        footerLogo: updatedSiteImages.footerLogo || db.settings?.footerLogo,
+      };
+      saveDatabase({ settings: updatedSettings as any });
+
+      res.json({
+        success: true,
+        siteImages: updatedSiteImages,
+        message: 'All images stored permanently in Cloudflare R2 and persistent database.',
+      });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

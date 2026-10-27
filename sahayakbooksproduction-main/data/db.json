@@ -823,11 +823,11 @@
     "brandName": "Sahayak Books",
     "tagline": "Knowledge That Moves You Forward",
     "parentCompany": "Sahayak Associates",
-    "mainLogo": "/assets/corporate/sahayak_logo.png",
+    "mainLogo": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/logo_permanent.webp",
     "darkLogo": "",
     "lightLogo": "",
     "mobileLogo": "",
-    "footerLogo": "/assets/corporate/sahayak_logo.png",
+    "footerLogo": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/footerLogo_permanent.webp",
     "socialShareLogo": "",
     "favicon": "",
     "heroHeading": "Books That Inform. Ideas That Inspire.",
@@ -955,11 +955,11 @@
     },
     "siteImages": {
       "heroBackground": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/hero_bull_bear.jpg",
-      "officeEntrance": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_entrance.jpg",
-      "officeLibrary": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_library.jpg",
-      "logo": "/assets/corporate/sahayak_logo.png",
-      "footerLogo": "/assets/corporate/sahayak_logo.png",
-      "mascot": "/assets/corporate/sahayak_mascot_full.png",
+      "officeEntrance": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeEntrance_permanent.webp",
+      "officeLibrary": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeLibrary_permanent.webp",
+      "logo": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/logo_permanent.webp",
+      "footerLogo": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/footerLogo_permanent.webp",
+      "mascot": "https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/sahayak_mascot_full.png",
       "founderPortrait": "/sandeep_sahni.jpg",
       "heroBackgroundHidden": false,
       "officeEntranceHidden": false,
@@ -2101,5 +2101,5 @@
       "device": "desktop"
     }
   ],
-  "updatedAt": "2026-10-26T06:04:20.796Z"
+  "updatedAt": "2026-10-27T07:05:33.687Z"
 }

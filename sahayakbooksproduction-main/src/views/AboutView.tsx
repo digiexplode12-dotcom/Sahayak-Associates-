@@ -7,7 +7,7 @@ export const AboutView: React.FC = () => {
 
   const officeEntranceUrl = settings?.siteImages?.officeEntranceHidden
     ? null
-    : (settings?.siteImages?.officeEntrance || '/assets/corporate/office_entrance.jpg');
+    : (settings?.siteImages?.officeEntrance || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeEntrance_permanent.webp');
 
   const sandeepAuthor = authors.find(
     (a) => a.id === 'author-sandeep-sahni' || a.slug === 'sandeep-sahni' || a.name.toLowerCase().includes('sandeep')

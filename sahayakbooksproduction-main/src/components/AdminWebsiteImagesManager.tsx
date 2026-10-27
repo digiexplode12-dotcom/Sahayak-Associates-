@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { WebsiteSiteImages } from '../types';
-import { uploadFileToR2, syncSiteImagesToR2 } from '../services/r2MediaService';
+import { uploadFileToR2, syncSiteImagesToR2, persistCustomImageUrl } from '../services/r2MediaService';
 import { compressImageToSafeDataUrl } from '../utils/imageUtils';
 import { saveSiteImagesToIndexedDB } from '../utils/siteImagesStorage';
 import {
@@ -54,7 +54,7 @@ const WEBSITE_IMAGE_DEFINITIONS: ImageDefinition[] = [
     title: 'Office Entrance & Reception Showcase',
     category: 'Institutional',
     description: "Photograph of Sahayak Associates' physical office entrance and reception in Sector 31-A, Chandigarh.",
-    defaultUrl: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_entrance.jpg',
+    defaultUrl: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeEntrance_permanent.webp',
     aspectRatio: 'Portrait 4:5 or 3:4 (e.g. 800x1000)',
     whereUsed: "Homepage 'About Us' (Section 3) & /about page",
   },
@@ -64,7 +64,7 @@ const WEBSITE_IMAGE_DEFINITIONS: ImageDefinition[] = [
     title: 'Knowledge Center & Office Library',
     category: 'Institutional',
     description: 'Photograph of the physical library, bookshelf, and academic research facility at Sahayak Associates.',
-    defaultUrl: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_library.jpg',
+    defaultUrl: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeLibrary_permanent.webp',
     aspectRatio: 'Landscape 16:9 or 4:3 (e.g. 1200x800)',
     whereUsed: "Homepage 'Sahayak Gurukul' (Section 7) & /gurukul page",
   },
@@ -74,7 +74,7 @@ const WEBSITE_IMAGE_DEFINITIONS: ImageDefinition[] = [
     title: 'Primary Brand Logo (Navigation Bar)',
     category: 'Branding',
     description: 'The official Sahayak Associates corporate logo displayed at the top of the website.',
-    defaultUrl: '/assets/corporate/sahayak_logo.png',
+    defaultUrl: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/logo_permanent.webp',
     aspectRatio: 'Horizontal Transparent PNG / SVG (e.g. 300x80)',
     whereUsed: 'Global Navigation Header (All Pages)',
   },
@@ -84,7 +84,7 @@ const WEBSITE_IMAGE_DEFINITIONS: ImageDefinition[] = [
     title: 'Footer Brand Insignia',
     category: 'Branding',
     description: 'Logo displayed in the footer next to the corporate description and regulatory disclosures.',
-    defaultUrl: '/assets/corporate/sahayak_logo.png',
+    defaultUrl: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/footerLogo_permanent.webp',
     aspectRatio: 'Horizontal Transparent PNG / SVG',
     whereUsed: 'Global Corporate Footer (All Pages)',
   },
@@ -116,10 +116,10 @@ export const AdminWebsiteImagesManager: React.FC = () => {
   // Local draft state for siteImages
   const [siteImages, setSiteImages] = useState<WebsiteSiteImages>(() => ({
     heroBackground: '/assets/corporate/hero_bull_bear.jpg',
-    officeEntrance: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_entrance.jpg',
-    officeLibrary: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_library.jpg',
-    logo: '/assets/corporate/sahayak_logo.png',
-    footerLogo: '/assets/corporate/sahayak_logo.png',
+    officeEntrance: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeEntrance_permanent.webp',
+    officeLibrary: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/officeLibrary_permanent.webp',
+    logo: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/logo_permanent.webp',
+    footerLogo: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/footerLogo_permanent.webp',
     mascot: '/assets/corporate/sahayak_mascot_full.png',
     founderPortrait: '/sandeep_sahni.jpg',
     heroBackgroundHidden: false,
@@ -182,16 +182,36 @@ export const AdminWebsiteImagesManager: React.FC = () => {
     return Boolean(current && current !== def.defaultUrl);
   };
 
-  // Handle URL change
-  const handleApplyUrl = (key: keyof WebsiteSiteImages, url: string) => {
+  // Handle URL change - persists immediately to R2 to prevent expiring links
+  const handleApplyUrl = async (key: keyof WebsiteSiteImages, url: string) => {
     if (!url || !url.trim()) return;
-    setSiteImages((prev) => ({
-      ...prev,
-      [key]: url.trim(),
-      [`${String(key)}Hidden`]: false,
-    }));
-    setHasUnsavedChanges(true);
-    showToast('Image URL updated! Click "Save & Publish Changes" to apply.');
+    showToast('Securing image permanently to Cloudflare R2...');
+    try {
+      const permanentUrl = await persistCustomImageUrl(url.trim(), String(key));
+      const updatedImages: WebsiteSiteImages = {
+        ...siteImages,
+        [key]: permanentUrl,
+        [`${String(key)}Hidden`]: false,
+      };
+      setSiteImages(updatedImages);
+      await saveSiteImagesToIndexedDB(updatedImages);
+      await syncSiteImagesToR2(updatedImages);
+      await updateSettings({
+        siteImages: updatedImages,
+        mainLogo: updatedImages.logo || settings.mainLogo,
+        footerLogo: updatedImages.footerLogo || settings.footerLogo,
+      });
+      setHasUnsavedChanges(false);
+      showToast('Image permanently stored & published to website!');
+    } catch {
+      setSiteImages((prev) => ({
+        ...prev,
+        [key]: url.trim(),
+        [`${String(key)}Hidden`]: false,
+      }));
+      setHasUnsavedChanges(true);
+      showToast('Image URL updated! Click "Save & Publish Changes" to apply.');
+    }
   };
 
   // Handle File Upload
@@ -215,7 +235,12 @@ export const AdminWebsiteImagesManager: React.FC = () => {
         },
       });
 
-      const effectiveUrl = uploaded.publicUrl || uploaded.url;
+      let effectiveUrl = uploaded.publicUrl || uploaded.url;
+      // Ensure effectiveUrl is not raw base64; persist permanently
+      if (effectiveUrl.startsWith('data:')) {
+        effectiveUrl = await persistCustomImageUrl(effectiveUrl, String(def.key));
+      }
+
       const updatedImages: WebsiteSiteImages = {
         ...siteImages,
         [def.key]: effectiveUrl,
@@ -230,18 +255,18 @@ export const AdminWebsiteImagesManager: React.FC = () => {
         footerLogo: updatedImages.footerLogo || settings.footerLogo,
       });
       setHasUnsavedChanges(false);
-      showToast(`Uploaded and saved new asset for ${def.title}!`);
+      showToast(`Uploaded and permanently published asset for ${def.title}!`);
     } catch (err: any) {
       console.warn('Remote upload unavailable, optimizing and saving locally:', err);
       try {
         const safeDataUrl = await compressImageToSafeDataUrl(file, 1600, 1600, 0.85);
+        const permanentUrl = await persistCustomImageUrl(safeDataUrl, String(def.key));
         const updatedImages: WebsiteSiteImages = {
           ...siteImages,
-          [def.key]: safeDataUrl,
+          [def.key]: permanentUrl,
           [def.hiddenKey]: false,
         };
         setSiteImages(updatedImages);
-        // Automatically save immediately to IndexedDB, R2, and settings
         await saveSiteImagesToIndexedDB(updatedImages);
         await syncSiteImagesToR2(updatedImages);
         await updateSettings({
@@ -250,7 +275,7 @@ export const AdminWebsiteImagesManager: React.FC = () => {
           footerLogo: updatedImages.footerLogo || settings.footerLogo,
         });
         setHasUnsavedChanges(false);
-        showToast(`Loaded, optimized and saved image for ${def.title}!`);
+        showToast(`Image permanently optimized and saved for ${def.title}!`);
       } catch (procErr: any) {
         showToast(`Failed to process image: ${procErr.message || 'Unknown error'}`);
       }

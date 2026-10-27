@@ -8,10 +8,9 @@ export const CorporateNavbar: React.FC = () => {
   const [gurukulDropdown, setGurukulDropdown] = useState(false);
   const [loginDropdown, setLoginDropdown] = useState(false);
 
-  // Dynamic Brand Logo configured from Admin Images Manager
   const logoSrc = settings?.siteImages?.logoHidden
     ? null
-    : (settings?.siteImages?.logo || settings?.mainLogo || settings?.logoUrl || '/assets/corporate/sahayak_logo.png');
+    : (settings?.siteImages?.logo || settings?.mainLogo || settings?.logoUrl || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/logo_permanent.webp');
 
   const gurukulRef = useRef<HTMLDivElement>(null);
   const loginRef = useRef<HTMLDivElement>(null);

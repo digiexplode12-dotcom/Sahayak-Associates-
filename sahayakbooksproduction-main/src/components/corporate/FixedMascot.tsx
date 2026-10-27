@@ -6,7 +6,7 @@ export const FixedMascot: React.FC = () => {
 
   const mascotSrc = settings?.siteImages?.mascotHidden
     ? null
-    : (settings?.siteImages?.mascot || '/assets/corporate/sahayak_mascot_full.png');
+    : (settings?.siteImages?.mascot || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/sahayak_mascot_full.png');
 
   if (!mascotSrc) {
     return null;

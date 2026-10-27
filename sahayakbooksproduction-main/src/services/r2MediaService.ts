@@ -2,11 +2,12 @@ import { MediaItem, MediaUsage, R2StorageStatus, Book, Author, BlogPost, Website
 import { processImageFile } from '../utils/imageUtils';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-const R2_PUBLIC_URL = (import.meta.env.VITE_CLOUDFLARE_R2_PUBLIC_URL || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev').replace(/\/+$/, '');
-const R2_BUCKET = import.meta.env.VITE_CLOUDFLARE_R2_BUCKET_NAME || 'sahayak';
-const R2_ENDPOINT = import.meta.env.VITE_CLOUDFLARE_R2_ENDPOINT || 'https://93888554ef9d9e0b8c18b322683a9652.r2.cloudflarestorage.com';
-const R2_ACCESS_KEY_ID = import.meta.env.VITE_CLOUDFLARE_R2_ACCESS_KEY_ID || 'c5d59beff364b2c883f4f2df1883bb60';
-const R2_SECRET_ACCESS_KEY = import.meta.env.VITE_CLOUDFLARE_R2_SECRET_ACCESS_KEY || 'f2b349663c9052ef9db10e365062cf750d53895b33924899d7c98b8a6c8e7661';
+const env = ((import.meta as any).env || {}) as Record<string, string>;
+const R2_PUBLIC_URL = (env.VITE_CLOUDFLARE_R2_PUBLIC_URL || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev').replace(/\/+$/, '');
+const R2_BUCKET = env.VITE_CLOUDFLARE_R2_BUCKET_NAME || 'sahayak';
+const R2_ENDPOINT = env.VITE_CLOUDFLARE_R2_ENDPOINT || 'https://93888554ef9d9e0b8c18b322683a9652.r2.cloudflarestorage.com';
+const R2_ACCESS_KEY_ID = env.VITE_CLOUDFLARE_R2_ACCESS_KEY_ID || 'c5d59beff364b2c883f4f2df1883bb60';
+const R2_SECRET_ACCESS_KEY = env.VITE_CLOUDFLARE_R2_SECRET_ACCESS_KEY || 'f2b349663c9052ef9db10e365062cf750d53895b33924899d7c98b8a6c8e7661';
 
 let directS3Client: S3Client | null = null;
 function getDirectS3Client(): S3Client {
@@ -40,6 +41,17 @@ export async function directUploadFileToR2(
 }
 
 export async function syncSiteImagesToR2(images: WebsiteSiteImages): Promise<boolean> {
+  // 1. Try server persistence endpoint first
+  try {
+    const res = await fetch('/api/site-images/persist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images }),
+    });
+    if (res.ok) return true;
+  } catch {}
+
+  // 2. Direct S3 bucket sync fallback
   try {
     const client = getDirectS3Client();
     const jsonStr = JSON.stringify(images, null, 2);
@@ -54,6 +66,73 @@ export async function syncSiteImagesToR2(images: WebsiteSiteImages): Promise<boo
     console.warn('Could not sync siteImages config to R2:', err);
     return false;
   }
+}
+
+/**
+ * Persist any image (file, base64 dataUrl, or remote temporary URL) into a permanent, non-expiring Cloudflare R2 asset
+ */
+export async function persistCustomImageUrl(urlOrDataUrl: string, keyName: string = 'image'): Promise<string> {
+  if (!urlOrDataUrl || typeof urlOrDataUrl !== 'string') return urlOrDataUrl;
+  const trimmed = urlOrDataUrl.trim();
+  if (!trimmed) return trimmed;
+
+  // If already an unexpiring asset on R2 without temporary query signatures
+  if (trimmed.startsWith(R2_PUBLIC_URL) && !trimmed.includes('X-Amz-Expires') && !trimmed.includes('Signature')) {
+    return trimmed;
+  }
+
+  // 1. Try server persistence endpoint first
+  try {
+    const res = await fetch('/api/site-images/persist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: { [keyName]: trimmed } }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.siteImages && data.siteImages[keyName]) {
+        return data.siteImages[keyName];
+      }
+    }
+  } catch (err) {
+    console.warn('[persistCustomImageUrl] Server persist fallback:', err);
+  }
+
+  // 2. Direct browser S3 client upload to R2
+  try {
+    let blob: Blob | null = null;
+    let contentType = 'image/webp';
+    let ext = 'webp';
+
+    if (trimmed.startsWith('data:')) {
+      const match = trimmed.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        contentType = match[1];
+        ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+        const bin = atob(match[2]);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        blob = new Blob([arr], { type: contentType });
+      }
+    } else if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      const res = await fetch(trimmed);
+      if (res.ok) {
+        contentType = res.headers.get('content-type') || 'image/jpeg';
+        ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+        blob = await res.blob();
+      }
+    }
+
+    if (blob) {
+      const objectKey = `branding/${keyName.toLowerCase()}_${Date.now()}.${ext}`;
+      const permUrl = await directUploadFileToR2(blob, objectKey, contentType);
+      return permUrl;
+    }
+  } catch (s3Err) {
+    console.warn('[persistCustomImageUrl] Direct S3 upload failed:', s3Err);
+  }
+
+  return trimmed;
 }
 
 export async function fetchSiteImagesFromR2(): Promise<WebsiteSiteImages | null> {
@@ -148,7 +227,7 @@ export async function uploadFileToR2(
     width,
     height,
     mimeType: file.type || 'image/jpeg',
-    storageProvider: 'r2',
+    storageProvider: 'cloudflare-r2',
     altText: altText || file.name,
     caption: caption || '',
     date: new Date().toISOString().split('T')[0],
@@ -166,7 +245,7 @@ export async function uploadFileToR2(
       url: publicUrl,
       publicUrl: publicUrl,
       objectKey,
-      storageProvider: 'r2',
+      storageProvider: 'cloudflare-r2',
     };
   } catch (directErr: any) {
     console.warn('[R2 Direct Upload] Direct S3 upload failed, trying API proxy:', directErr?.message || directErr);

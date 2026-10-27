@@ -12,7 +12,7 @@ import {
   Search,
   ExternalLink,
 } from 'lucide-react';
-import { uploadFileToR2 } from '../services/r2MediaService';
+import { uploadFileToR2, persistCustomImageUrl } from '../services/r2MediaService';
 import { useStore } from '../context/StoreContext';
 import { MediaItem } from '../types';
 
@@ -139,9 +139,19 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     setIsDragging(false);
   };
 
-  const handleUrlApply = () => {
+  const handleUrlApply = async () => {
     if (!urlInput.trim()) return;
-    onChange(urlInput.trim());
+    const raw = urlInput.trim();
+    onChange(raw);
+    try {
+      const permanent = await persistCustomImageUrl(raw, categoryFolder);
+      if (permanent && permanent !== raw) {
+        onChange(permanent);
+        setUrlInput(permanent);
+      }
+    } catch (err) {
+      console.warn('Could not auto-persist remote URL to R2:', err);
+    }
   };
 
   const handleClear = () => {

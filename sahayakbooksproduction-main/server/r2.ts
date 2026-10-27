@@ -7,6 +7,8 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 // Allowed MIME types
 export const ALLOWED_MIME_TYPES: Record<string, string> = {
@@ -404,3 +406,125 @@ export async function createPresignedUploadUrl(params: {
     publicUrl,
   };
 }
+
+/**
+ * Direct server-side sync of site-images.json to Cloudflare R2 bucket
+ */
+export async function syncSiteImagesToR2Direct(images: any): Promise<boolean> {
+  if (!isR2Configured()) return false;
+  try {
+    const client = getR2Client();
+    const config = getR2Config();
+    const jsonStr = JSON.stringify(images, null, 2);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: config.bucketName,
+        Key: 'config/site-images.json',
+        Body: Buffer.from(jsonStr, 'utf-8'),
+        ContentType: 'application/json',
+        CacheControl: 'no-cache, must-revalidate',
+      })
+    );
+    return true;
+  } catch (err) {
+    console.warn('[R2 Server] Could not sync site-images.json:', err);
+    return false;
+  }
+}
+
+/**
+ * Convert any base64 image or remote temporary URL into a permanent, non-expiring Cloudflare R2 asset
+ * Also saves a local fallback copy into public/uploads/branding/
+ */
+export async function persistBase64OrRemoteUrlToR2(
+  urlOrBase64: string,
+  keyName: string
+): Promise<string> {
+  if (!urlOrBase64 || typeof urlOrBase64 !== 'string') return urlOrBase64;
+  const trimmed = urlOrBase64.trim();
+  if (!trimmed) return trimmed;
+
+  const config = getR2Config();
+  const publicBase = config.publicUrl || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev';
+
+  // If already an unexpiring asset on R2 without temporary query signatures
+  if (trimmed.startsWith(publicBase) && !trimmed.includes('X-Amz-Expires') && !trimmed.includes('Signature')) {
+    return trimmed;
+  }
+
+  let buffer: Buffer | null = null;
+  let mimeType = 'image/webp';
+  let ext = 'webp';
+
+  if (trimmed.startsWith('data:')) {
+    const match = trimmed.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      mimeType = match[1];
+      buffer = Buffer.from(match[2], 'base64');
+      ext = ALLOWED_MIME_TYPES[mimeType] || 'webp';
+    } else {
+      return trimmed;
+    }
+  } else if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      const res = await fetch(trimmed);
+      if (!res.ok) return trimmed;
+      const contentType = res.headers.get('content-type') || 'image/jpeg';
+      mimeType = contentType.split(';')[0].trim();
+      ext = ALLOWED_MIME_TYPES[mimeType] || 'jpg';
+      const arrayBuffer = await res.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+    } catch (fetchErr) {
+      console.warn(`[R2 Persist] Failed to download remote image from ${trimmed}:`, fetchErr);
+      return trimmed;
+    }
+  } else {
+    // Relative local path like /sandeep_sahni.jpg or /assets/...
+    return trimmed;
+  }
+
+  if (!buffer || buffer.length === 0) return trimmed;
+
+  const timestamp = Date.now();
+  const cleanKey = keyName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+  const objectKey = `branding/${cleanKey}_${timestamp}.${ext}`;
+
+  // 1. Save local permanent file copy in public/uploads/branding/
+  try {
+    const possibleDirs = [
+      path.join(process.cwd(), 'public', 'uploads', 'branding'),
+      path.join(process.cwd(), 'sahayakbooksproduction-main', 'public', 'uploads', 'branding'),
+    ];
+    for (const d of possibleDirs) {
+      if (!fs.existsSync(d)) {
+        fs.mkdirSync(d, { recursive: true });
+      }
+      fs.writeFileSync(path.join(d, `${cleanKey}_${timestamp}.${ext}`), buffer);
+    }
+  } catch (fsErr) {
+    console.warn('[R2 Persist] Could not save local copy:', fsErr);
+  }
+
+  // 2. Upload to Cloudflare R2 bucket with 1-year immutable cache (never expires)
+  if (isR2Configured()) {
+    try {
+      const client = getR2Client();
+      await client.send(
+        new PutObjectCommand({
+          Bucket: config.bucketName,
+          Key: objectKey,
+          Body: buffer,
+          ContentType: mimeType,
+          CacheControl: 'public, max-age=31536000, immutable',
+        })
+      );
+      return `${publicBase}/${objectKey}`;
+    } catch (uploadErr) {
+      console.error('[R2 Persist] S3 upload error:', uploadErr);
+      return `/uploads/branding/${cleanKey}_${timestamp}.${ext}`;
+    }
+  }
+
+  return `/uploads/branding/${cleanKey}_${timestamp}.${ext}`;
+}
+

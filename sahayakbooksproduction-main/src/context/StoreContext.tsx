@@ -23,6 +23,7 @@ import {
   ReviewStatus,
   GoogleMerchantSyncLog,
   GoogleShoppingStatus,
+  WebsiteSiteImages,
 } from '../types';
 import {
   INITIAL_BOOKS,
@@ -269,6 +270,53 @@ export const normalizeAppPath = (raw?: string | null): string => {
 // Cross-tab real-time synchronization helper
 const SYNC_CHANNEL_NAME = 'sahayak_tab_sync';
 
+// Stock/default images that must never overwrite user custom images
+const STOCK_DEFAULT_URLS = new Set([
+  '/assets/corporate/hero_bull_bear.jpg',
+  'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/hero_bull_bear.jpg',
+  '/assets/corporate/office_entrance.jpg',
+  'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_entrance.jpg',
+  '/assets/corporate/office_library.jpg',
+  'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/office_library.jpg',
+  '/assets/corporate/sahayak_logo.png',
+  '/assets/corporate/sahayak_mascot_full.png',
+  'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/sahayak_mascot_full.png',
+  '/sandeep_sahni.jpg'
+]);
+
+function isCustomImageUrl(url: any): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  return !STOCK_DEFAULT_URLS.has(trimmed);
+}
+
+function mergeSiteImagesPreservingCustom(
+  ...sources: (WebsiteSiteImages | undefined | null)[]
+): WebsiteSiteImages {
+  const result: any = { ...(INITIAL_SETTINGS.siteImages || {}) };
+
+  for (const src of sources) {
+    if (!src || typeof src !== 'object') continue;
+    for (const [key, val] of Object.entries(src)) {
+      if (val === undefined || val === null) continue;
+
+      if (key.endsWith('Hidden')) {
+        result[key] = Boolean(val);
+      } else if (typeof val === 'string' && val.trim().length > 0) {
+        const currentVal = result[key];
+        // If currentVal is already a custom image and incoming val is just a stock default, do NOT revert!
+        if (isCustomImageUrl(currentVal) && !isCustomImageUrl(val)) {
+          continue;
+        }
+        result[key] = val.trim();
+      }
+    }
+  }
+
+  return result as WebsiteSiteImages;
+}
+
 function broadcastTabSync(key: string, data: any) {
   if (typeof window === 'undefined') return;
   try {
@@ -381,10 +429,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return {
             ...INITIAL_SETTINGS,
             ...parsed,
-            siteImages: {
-              ...(INITIAL_SETTINGS.siteImages || {}),
-              ...(parsed.siteImages || {}),
-            },
+            siteImages: mergeSiteImagesPreservingCustom(INITIAL_SETTINGS.siteImages, parsed.siteImages),
           };
         }
       }
@@ -774,10 +819,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .then((r2Images) => {
         if (r2Images && typeof r2Images === 'object') {
           setSettings((prev) => {
-            const nextImages = {
-              ...(prev.siteImages || {}),
-              ...r2Images,
-            };
+            const nextImages = mergeSiteImagesPreservingCustom(prev.siteImages, r2Images);
             const next = {
               ...prev,
               siteImages: nextImages,
@@ -915,19 +957,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               r2SiteImages = await fetchSiteImagesFromR2();
             } catch {}
 
-            const mergedSiteImages = {
-              ...(INITIAL_SETTINGS.siteImages || {}),
-              ...(data[5].settings?.siteImages || {}),
-              ...(localSettings?.siteImages || {}),
-              ...(indexedSiteImages || {}),
-              ...(r2SiteImages || {}),
-            };
+            const mergedSiteImages = mergeSiteImagesPreservingCustom(
+              INITIAL_SETTINGS.siteImages,
+              data[5].settings?.siteImages,
+              localSettings?.siteImages,
+              indexedSiteImages,
+              r2SiteImages
+            );
 
             const finalSettings = {
               ...INITIAL_SETTINGS,
               ...data[5].settings,
               ...localSettings,
               siteImages: mergedSiteImages,
+              mainLogo: mergedSiteImages.logo || data[5].settings?.mainLogo || localSettings?.mainLogo || INITIAL_SETTINGS.mainLogo,
+              footerLogo: mergedSiteImages.footerLogo || data[5].settings?.footerLogo || localSettings?.footerLogo || INITIAL_SETTINGS.footerLogo,
               contactInfo: {
                 ...(data[5].settings?.contactInfo || {}),
                 ...(localSettings?.contactInfo || {}),
@@ -2290,15 +2334,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const resData = await persistToServer('/api/settings', 'PUT', newSettings);
       const updated = resData?.settings || newSettings;
       setSettings((prev) => {
-        const mergedSiteImages = {
-          ...(prev.siteImages || {}),
-          ...(newSettings.siteImages || {}),
-          ...(updated.siteImages || {}),
-        };
+        const mergedSiteImages = mergeSiteImagesPreservingCustom(
+          prev.siteImages,
+          newSettings.siteImages,
+          updated.siteImages
+        );
         const next = {
           ...prev,
           ...updated,
           siteImages: mergedSiteImages,
+          mainLogo: mergedSiteImages.logo || updated.mainLogo || prev.mainLogo,
+          footerLogo: mergedSiteImages.footerLogo || updated.footerLogo || prev.footerLogo,
         };
         broadcastTabSync('sahayak_settings', next);
         return next;
