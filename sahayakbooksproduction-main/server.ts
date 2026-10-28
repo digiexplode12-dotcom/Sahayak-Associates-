@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 
-const __filename = typeof import.meta?.url === 'string' ? fileURLToPath(import.meta.url) : (typeof __filename !== 'undefined' ? __filename : '');
-const __dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import {
   isR2Configured,
   getSafeMaskedStatus,
@@ -1703,6 +1703,7 @@ async function startServer() {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
+      root: __dirname,
     });
     app.use(vite.middlewares);
   } else {
