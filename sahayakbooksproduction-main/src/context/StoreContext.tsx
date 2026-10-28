@@ -284,6 +284,21 @@ const STOCK_DEFAULT_URLS = new Set([
   'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png'
 ]);
 
+export function getAuthorStockAvatar(authorOrIdOrSlug?: any): string {
+  if (!authorOrIdOrSlug) return '';
+  const str = typeof authorOrIdOrSlug === 'string'
+    ? authorOrIdOrSlug.toLowerCase()
+    : ((authorOrIdOrSlug.id || '') + ' ' + (authorOrIdOrSlug.slug || '') + ' ' + (authorOrIdOrSlug.name || '')).toLowerCase();
+  
+  if (str.includes('sandeep')) {
+    return 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sandeep_sahni_permanent.jpg';
+  }
+  if (str.includes('sanjit') || str.includes('paul')) {
+    return 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sanjit_singh_paul_permanent.jpg';
+  }
+  return '';
+}
+
 function isCustomImageUrl(url: any): boolean {
   if (!url || typeof url !== 'string') return false;
   const trimmed = url.trim();
@@ -361,14 +376,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((a: Author) => {
-            const initAuth = INITIAL_AUTHORS.find((ia) => ia.id === a.id || ia.slug === a.slug);
+            const stockAvatar = getAuthorStockAvatar(a);
             let avatar = a.avatar;
-            if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png')) {
-              avatar = initAuth?.avatar || '';
+            if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png') || avatar.startsWith('/sandeep_sahni')) {
+              avatar = stockAvatar;
             }
             return {
               ...a,
-              avatar,
+              avatar: avatar || stockAvatar,
               coverImage: a.coverImage && a.coverImage.includes('images.unsplash.com') ? '' : a.coverImage,
             };
           });
@@ -898,28 +913,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               } else if (la) {
                 authorToUse = { ...sa, ...la };
               }
-              const initAuth = INITIAL_AUTHORS.find((ia) => ia.id === authorToUse.id || ia.slug === authorToUse.slug);
+              const stockAvatar = getAuthorStockAvatar(authorToUse);
               let avatar = authorToUse.avatar;
-              if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png')) {
-                avatar = initAuth?.avatar || '';
+              if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png') || avatar.startsWith('/sandeep_sahni')) {
+                avatar = stockAvatar;
               }
               return {
                 ...authorToUse,
-                avatar,
+                avatar: avatar || stockAvatar,
                 coverImage: authorToUse.coverImage && authorToUse.coverImage.includes('images.unsplash.com') ? '' : authorToUse.coverImage,
               };
             });
             const localOnlyAuthors = localAuthors
               .filter((la) => !serverAuthorIds.has(la.id) && !data[1].authors.some((sa: Author) => sa.slug === la.slug))
               .map(la => {
-                const initAuth = INITIAL_AUTHORS.find((ia) => ia.id === la.id || ia.slug === la.slug);
+                const stockAvatar = getAuthorStockAvatar(la);
                 let avatar = la.avatar;
-                if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png')) {
-                  avatar = initAuth?.avatar || '';
+                if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png') || avatar.startsWith('/sandeep_sahni')) {
+                  avatar = stockAvatar;
                 }
                 return {
                   ...la,
-                  avatar,
+                  avatar: avatar || stockAvatar,
                   coverImage: la.coverImage && la.coverImage.includes('images.unsplash.com') ? '' : la.coverImage,
                 };
               });
