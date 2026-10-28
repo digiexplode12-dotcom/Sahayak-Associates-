@@ -1166,13 +1166,22 @@ export const CorporateHomeView: React.FC = () => {
                         onClick={() => navigate(`/authors/${auth.slug}`)}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200/90 hover:border-[#C9A24E] shadow-sm transition-all group cursor-pointer"
                       >
-                        {auth.avatar && !auth.avatar.includes('unsplash.com') ? (
+                        {auth.avatar && !auth.avatar.includes('unsplash.com') && !auth.avatar.includes('default-author.png') ? (
                           <img
                             src={auth.avatar}
                             alt={auth.name}
                             className="w-6 h-6 rounded-full object-cover border border-[#C9A24E]"
                             onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
+                              const fallback = auth.name.toLowerCase().includes('sandeep')
+                                ? '/sandeep_sahni.jpg'
+                                : auth.name.toLowerCase().includes('sanjit')
+                                ? '/sanjit_singh_paul.jpg'
+                                : '';
+                              if (fallback && (e.target as HTMLImageElement).src !== fallback) {
+                                (e.target as HTMLImageElement).src = fallback;
+                              } else {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }
                             }}
                           />
                         ) : (

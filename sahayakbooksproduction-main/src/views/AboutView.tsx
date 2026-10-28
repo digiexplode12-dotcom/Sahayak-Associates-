@@ -15,7 +15,7 @@ export const AboutView: React.FC = () => {
 
   const founderPortraitUrl = settings?.siteImages?.founderPortraitHidden
     ? null
-    : (sandeepAuthor?.avatar || settings?.siteImages?.founderPortrait || '/sandeep_sahni.jpg');
+    : (sandeepAuthor?.avatar || settings?.siteImages?.founderPortrait || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sandeep_sahni_permanent.jpg');
 
   return (
     <div id="about-page" className="w-full bg-[#FAF7F2] text-[#11243B]">

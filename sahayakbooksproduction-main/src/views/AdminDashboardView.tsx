@@ -464,7 +464,7 @@ export const AdminDashboardView: React.FC = () => {
       name: '',
       slug: '',
       title: 'Author & Financial Educator',
-      avatar: 'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png',
+      avatar: '',
       coverImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
       bio: '',
       biography: '',

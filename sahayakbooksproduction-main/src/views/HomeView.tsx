@@ -274,13 +274,22 @@ export const HomeView: React.FC = () => {
                 >
                   <div className="text-center">
                     <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-2 border-[#C5A059] shadow-md group-hover:scale-105 transition-transform">
-                      {author.avatar && !author.avatar.includes('unsplash.com') ? (
+                      {author.avatar && !author.avatar.includes('unsplash.com') && !author.avatar.includes('default-author.png') ? (
                         <img
                           src={author.avatar}
                           alt={author.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
+                            const fallback = author.name.toLowerCase().includes('sandeep')
+                              ? '/sandeep_sahni.jpg'
+                              : author.name.toLowerCase().includes('sanjit')
+                              ? '/sanjit_singh_paul.jpg'
+                              : '';
+                            if (fallback && (e.target as HTMLImageElement).src !== fallback) {
+                              (e.target as HTMLImageElement).src = fallback;
+                            } else {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }
                           }}
                         />
                       ) : (

@@ -15,7 +15,7 @@ export const BooksLandingView: React.FC = () => {
 
   const founderPortraitUrl = settings?.siteImages?.founderPortraitHidden
     ? null
-    : (sandeepAuthor?.avatar || settings?.siteImages?.founderPortrait || '/sandeep_sahni.jpg');
+    : (sandeepAuthor?.avatar || settings?.siteImages?.founderPortrait || 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sandeep_sahni_permanent.jpg');
 
   // Filtered and sorted books
   const filteredBooks = useMemo(() => {
@@ -320,16 +320,30 @@ export const BooksLandingView: React.FC = () => {
                     onClick={() => navigate(`/authors/${auth.slug}`)}
                     className="p-5 rounded-2xl bg-white border border-stone-200/80 hover:border-[#C9A24E] shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 group"
                   >
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#C9A24E] shrink-0 bg-stone-100 shadow-sm">
-                      <img
-                        src={auth.avatar}
-                        alt={auth.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png';
-                        }}
-                      />
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#C9A24E] shrink-0 bg-stone-100 shadow-sm flex items-center justify-center">
+                      {auth.avatar && !auth.avatar.includes('unsplash.com') && !auth.avatar.includes('default-author.png') ? (
+                        <img
+                          src={auth.avatar}
+                          alt={auth.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            const fallback = auth.name.toLowerCase().includes('sandeep')
+                              ? '/sandeep_sahni.jpg'
+                              : auth.name.toLowerCase().includes('sanjit')
+                              ? '/sanjit_singh_paul.jpg'
+                              : '';
+                            if (fallback && (e.target as HTMLImageElement).src !== fallback) {
+                              (e.target as HTMLImageElement).src = fallback;
+                            } else {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#0B192C] via-[#102542] to-[#1B365D] flex items-center justify-center text-[#DEBF6A] font-serif font-bold text-lg">
+                          {auth.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                        </div>
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="font-serif font-bold text-base text-[#071526] group-hover:text-[#C9A24E] transition-colors truncate">

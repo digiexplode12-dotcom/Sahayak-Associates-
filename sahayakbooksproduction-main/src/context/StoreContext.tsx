@@ -281,7 +281,7 @@ const STOCK_DEFAULT_URLS = new Set([
   '/assets/corporate/sahayak_logo.png',
   '/assets/corporate/sahayak_mascot_full.png',
   'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/sahayak_mascot_full.png',
-  '/sandeep_sahni.jpg'
+  'https://pub-d7c01d3edc7e4dbab0acb59d64c988a8.r2.dev/sahayak/authors/default-author.png'
 ]);
 
 function isCustomImageUrl(url: any): boolean {
@@ -360,11 +360,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((a: Author) => ({
-            ...a,
-            avatar: a.avatar && a.avatar.includes('images.unsplash.com') ? '' : a.avatar,
-            coverImage: a.coverImage && a.coverImage.includes('images.unsplash.com') ? '' : a.coverImage,
-          }));
+          return parsed.map((a: Author) => {
+            const initAuth = INITIAL_AUTHORS.find((ia) => ia.id === a.id || ia.slug === a.slug);
+            let avatar = a.avatar;
+            if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png')) {
+              avatar = initAuth?.avatar || '';
+            }
+            return {
+              ...a,
+              avatar,
+              coverImage: a.coverImage && a.coverImage.includes('images.unsplash.com') ? '' : a.coverImage,
+            };
+          });
         }
       }
     } catch {}
@@ -891,19 +898,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               } else if (la) {
                 authorToUse = { ...sa, ...la };
               }
+              const initAuth = INITIAL_AUTHORS.find((ia) => ia.id === authorToUse.id || ia.slug === authorToUse.slug);
+              let avatar = authorToUse.avatar;
+              if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png')) {
+                avatar = initAuth?.avatar || '';
+              }
               return {
                 ...authorToUse,
-                avatar: authorToUse.avatar && authorToUse.avatar.includes('images.unsplash.com') ? '' : authorToUse.avatar,
+                avatar,
                 coverImage: authorToUse.coverImage && authorToUse.coverImage.includes('images.unsplash.com') ? '' : authorToUse.coverImage,
               };
             });
             const localOnlyAuthors = localAuthors
               .filter((la) => !serverAuthorIds.has(la.id) && !data[1].authors.some((sa: Author) => sa.slug === la.slug))
-              .map(la => ({
-                ...la,
-                avatar: la.avatar && la.avatar.includes('images.unsplash.com') ? '' : la.avatar,
-                coverImage: la.coverImage && la.coverImage.includes('images.unsplash.com') ? '' : la.coverImage,
-              }));
+              .map(la => {
+                const initAuth = INITIAL_AUTHORS.find((ia) => ia.id === la.id || ia.slug === la.slug);
+                let avatar = la.avatar;
+                if (!avatar || avatar.includes('images.unsplash.com') || avatar.includes('default-author.png')) {
+                  avatar = initAuth?.avatar || '';
+                }
+                return {
+                  ...la,
+                  avatar,
+                  coverImage: la.coverImage && la.coverImage.includes('images.unsplash.com') ? '' : la.coverImage,
+                };
+              });
             const finalAuthors = [...mergedAuthors, ...localOnlyAuthors];
             setAuthors(finalAuthors);
             try { localStorage.setItem('sahayak_authors', JSON.stringify(finalAuthors)); } catch {}

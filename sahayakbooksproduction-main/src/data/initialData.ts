@@ -6,7 +6,7 @@ export const INITIAL_AUTHORS: Author[] = [
     slug: 'sandeep-sahni',
     name: 'Sandeep Sahni',
     title: 'Author, Financial Educator & Founder, Sahayak Associates',
-    avatar: '/sandeep_sahni.jpg?v=2',
+    avatar: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sandeep_sahni_permanent.jpg',
     coverImage: '',
     bio: 'Sandeep Sahni is the Founder & Managing Director of Sahayak Associates, a respected author and financial educator dedicated to spreading financial literacy, personal finance wisdom, and empowering life lessons for young adults and families.',
     qualifications: [
@@ -32,7 +32,7 @@ export const INITIAL_AUTHORS: Author[] = [
     slug: 'sanjit-singh-paul',
     name: 'Sanjit Singh Paul',
     title: 'Founder & Managing Partner, Modulor Capital',
-    avatar: '',
+    avatar: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sanjit_singh_paul_permanent.jpg',
     coverImage: '',
     bio: 'Sanjit Singh Paul is a SEBI Registered Investment Adviser, ISB alumnus, and co-author of "What My MBA Did Not Teach Me About Money". He specializes in behavioral finance, quantitative asset allocation, and investor education.',
     qualifications: [
@@ -876,7 +876,7 @@ export const INITIAL_SETTINGS: WebsiteSettings = {
     logo: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/logo_permanent.webp',
     footerLogo: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/footerLogo_permanent.webp',
     mascot: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/assets/corporate/sahayak_mascot_full.png',
-    founderPortrait: '/sandeep_sahni.jpg',
+    founderPortrait: 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sandeep_sahni_permanent.jpg',
     heroBackgroundHidden: false,
     officeEntranceHidden: false,
     officeLibraryHidden: false,

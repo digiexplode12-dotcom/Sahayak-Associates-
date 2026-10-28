@@ -50,13 +50,22 @@ export const AuthorsView: React.FC = () => {
             >
               <div className="text-center">
                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full mx-auto mb-4 overflow-hidden border-2 border-[#C5A059] shadow-lg group-hover:scale-105 transition-transform duration-300">
-                  {author.avatar && !author.avatar.includes('unsplash.com') ? (
+                  {author.avatar && !author.avatar.includes('unsplash.com') && !author.avatar.includes('default-author.png') ? (
                     <img
                       src={author.avatar}
                       alt={author.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
+                        const fallback = author.name.toLowerCase().includes('sandeep')
+                          ? '/sandeep_sahni.jpg'
+                          : author.name.toLowerCase().includes('sanjit')
+                          ? '/sanjit_singh_paul.jpg'
+                          : '';
+                        if (fallback && (e.target as HTMLImageElement).src !== fallback) {
+                          (e.target as HTMLImageElement).src = fallback;
+                        } else {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }
                       }}
                     />
                   ) : (
@@ -124,13 +133,22 @@ export const AuthorDetailView: React.FC<{ slug: string }> = ({ slug }) => {
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
           <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden border-4 border-[#C5A059] shadow-2xl shrink-0">
-            {author.avatar && !author.avatar.includes('unsplash.com') ? (
+            {author.avatar && !author.avatar.includes('unsplash.com') && !author.avatar.includes('default-author.png') ? (
               <img
                 src={author.avatar}
                 alt={author.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
+                  const fallback = author.name.toLowerCase().includes('sandeep')
+                    ? '/sandeep_sahni.jpg'
+                    : author.name.toLowerCase().includes('sanjit')
+                    ? '/sanjit_singh_paul.jpg'
+                    : '';
+                  if (fallback && (e.target as HTMLImageElement).src !== fallback) {
+                    (e.target as HTMLImageElement).src = fallback;
+                  } else {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }
                 }}
               />
             ) : (
