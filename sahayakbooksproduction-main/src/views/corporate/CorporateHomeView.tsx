@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../../context/StoreContext';
+import { useStore, resolveAuthorAvatar } from '../../context/StoreContext';
 import { BookCard } from '../../components/BookCard';
 
 export const CorporateHomeView: React.FC = () => {
@@ -1166,29 +1166,20 @@ export const CorporateHomeView: React.FC = () => {
                         onClick={() => navigate(`/authors/${auth.slug}`)}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200/90 hover:border-[#C9A24E] shadow-sm transition-all group cursor-pointer"
                       >
-                        {auth.avatar && !auth.avatar.includes('unsplash.com') && !auth.avatar.includes('default-author.png') ? (
-                          <img
-                            src={auth.avatar}
-                            alt={auth.name}
-                            className="w-6 h-6 rounded-full object-cover border border-[#C9A24E]"
-                            onError={(e) => {
-                              const fallback = auth.name.toLowerCase().includes('sandeep')
-                                ? '/sandeep_sahni.jpg'
-                                : auth.name.toLowerCase().includes('sanjit')
-                                ? '/sanjit_singh_paul.jpg'
-                                : '';
-                              if (fallback && (e.target as HTMLImageElement).src !== fallback) {
-                                (e.target as HTMLImageElement).src = fallback;
-                              } else {
-                                (e.target as HTMLElement).style.display = 'none';
-                              }
-                            }}
-                          />
-                        ) : (
-                          <span className="w-6 h-6 rounded-full bg-[#071526] text-[#DEBF6A] text-[10px] font-bold font-serif flex items-center justify-center border border-[#C9A24E]">
-                            {auth.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                          </span>
-                        )}
+                        <img
+                          src={resolveAuthorAvatar(auth)}
+                          alt={auth.name}
+                          className="w-6 h-6 rounded-full object-cover border border-[#C9A24E]"
+                          onError={(e) => {
+                            const fallback = (auth.name || '').toLowerCase().includes('sanjit') || (auth.slug || '').includes('sanjit')
+                              ? '/sanjit_singh_paul.jpg'
+                              : '/sandeep_sahni.jpg';
+                            const target = e.currentTarget;
+                            if (!target.src.endsWith(fallback)) {
+                              target.src = fallback;
+                            }
+                          }}
+                        />
                         <span className="text-xs font-bold text-[#071526] group-hover:text-[#C9A24E] transition-colors">
                           {auth.name}
                         </span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../context/StoreContext';
+import { useStore, resolveAuthorAvatar } from '../context/StoreContext';
 import { BookCard } from '../components/BookCard';
 import { BookFormat } from '../types';
 import {
@@ -560,29 +560,20 @@ export const BookDetailView: React.FC<BookDetailViewProps> = ({ slug }) => {
               className="bg-gradient-to-r from-[#0B192C] to-[#0E2238] text-[#FAF7F2] rounded-3xl p-6 sm:p-10 border border-[#C5A059]/30 shadow-xl flex flex-col md:flex-row items-center gap-8"
             >
               <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-2 border-[#C5A059] shadow-lg shrink-0 bg-stone-900 flex items-center justify-center">
-                {auth.avatar && !auth.avatar.includes('unsplash.com') && !auth.avatar.includes('default-author.png') ? (
-                  <img
-                    src={auth.avatar}
-                    alt={auth.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const fallback = auth.name.toLowerCase().includes('sandeep')
-                        ? '/sandeep_sahni.jpg'
-                        : auth.name.toLowerCase().includes('sanjit')
-                        ? '/sanjit_singh_paul.jpg'
-                        : '';
-                      if (fallback && (e.target as HTMLImageElement).src !== fallback) {
-                        (e.target as HTMLImageElement).src = fallback;
-                      } else {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#0B192C] via-[#102542] to-[#1B365D] flex flex-col items-center justify-center text-[#DEBF6A] font-serif font-bold text-3xl sm:text-4xl">
-                    <span>{auth.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</span>
-                  </div>
-                )}
+                <img
+                  src={resolveAuthorAvatar(auth)}
+                  alt={auth.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const fallback = (auth.name || '').toLowerCase().includes('sanjit') || (auth.slug || '').includes('sanjit')
+                      ? '/sanjit_singh_paul.jpg'
+                      : '/sandeep_sahni.jpg';
+                    const target = e.currentTarget;
+                    if (!target.src.endsWith(fallback)) {
+                      target.src = fallback;
+                    }
+                  }}
+                />
               </div>
               <div className="space-y-3 flex-1 text-center md:text-left">
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#C5A059] uppercase tracking-wider">

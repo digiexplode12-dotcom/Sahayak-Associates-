@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStore } from '../context/StoreContext';
+import { useStore, resolveAuthorAvatar } from '../context/StoreContext';
 import { Hero3D } from '../components/Hero3D';
 import { BookCard } from '../components/BookCard';
 import { RevealOnScroll } from '../components/RevealOnScroll';
@@ -274,29 +274,20 @@ export const HomeView: React.FC = () => {
                 >
                   <div className="text-center">
                     <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-2 border-[#C5A059] shadow-md group-hover:scale-105 transition-transform">
-                      {author.avatar && !author.avatar.includes('unsplash.com') && !author.avatar.includes('default-author.png') ? (
-                        <img
-                          src={author.avatar}
-                          alt={author.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const fallback = author.name.toLowerCase().includes('sandeep')
-                              ? '/sandeep_sahni.jpg'
-                              : author.name.toLowerCase().includes('sanjit')
-                              ? '/sanjit_singh_paul.jpg'
-                              : '';
-                            if (fallback && (e.target as HTMLImageElement).src !== fallback) {
-                              (e.target as HTMLImageElement).src = fallback;
-                            } else {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-[#0B192C] via-[#102542] to-[#1B365D] flex items-center justify-center text-[#DEBF6A] font-serif font-bold text-xl tracking-wider">
-                          {author.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-                        </div>
-                      )}
+                      <img
+                        src={resolveAuthorAvatar(author)}
+                        alt={author.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const fallback = (author.name || '').toLowerCase().includes('sanjit') || (author.slug || '').includes('sanjit')
+                            ? '/sanjit_singh_paul.jpg'
+                            : '/sandeep_sahni.jpg';
+                          const target = e.currentTarget;
+                          if (!target.src.endsWith(fallback)) {
+                            target.src = fallback;
+                          }
+                        }}
+                      />
                     </div>
                     <h3 className="font-serif text-lg font-bold text-[#0B192C] group-hover:text-[#C5A059] transition-colors">
                       {author.name}

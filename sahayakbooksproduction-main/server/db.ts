@@ -118,6 +118,32 @@ function getDefaultDb(): DatabaseSchema {
   };
 }
 
+const SANDEEP_STOCK_URL = 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sandeep_sahni_permanent.jpg';
+const SANJIT_STOCK_URL = 'https://pub-1282ea95dd4a49ebb0c9ac2fbe6d88b9.r2.dev/branding/author_sanjit_singh_paul_permanent.jpg';
+
+function sanitizeAuthorStockAvatars(db: DatabaseSchema): DatabaseSchema {
+  if (Array.isArray(db.authors)) {
+    db.authors = db.authors.map((a: any) => {
+      const slug = ((a.slug || '') + ' ' + (a.id || '') + ' ' + (a.name || '')).toLowerCase();
+      if (slug.includes('sanjit') || slug.includes('paul')) {
+        const hasValidCustom = a.avatar && !a.avatar.includes('unsplash.com') && !a.avatar.includes('default-author.png') && a.avatar !== '' && !a.avatar.startsWith('data:image');
+        return { ...a, avatar: hasValidCustom ? a.avatar : SANJIT_STOCK_URL };
+      }
+      if (slug.includes('sandeep') || slug.includes('sahni')) {
+        const hasValidCustom = a.avatar && !a.avatar.includes('unsplash.com') && !a.avatar.includes('default-author.png') && !a.avatar.startsWith('/sandeep_sahni') && !a.avatar.startsWith('data:image');
+        return { ...a, avatar: hasValidCustom ? a.avatar : SANDEEP_STOCK_URL };
+      }
+      return a;
+    });
+  }
+  if (db.settings?.siteImages) {
+    if (!db.settings.siteImages.founderPortrait || db.settings.siteImages.founderPortrait === '/sandeep_sahni.jpg' || db.settings.siteImages.founderPortrait.includes('unsplash.com')) {
+      db.settings.siteImages.founderPortrait = SANDEEP_STOCK_URL;
+    }
+  }
+  return db;
+}
+
 // In-memory cache for fast read/write
 let inMemoryDb: DatabaseSchema | null = null;
 
@@ -129,7 +155,7 @@ export function getDatabase(): DatabaseSchema {
   if (fs.existsSync(DB_FILE)) {
     try {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
-      inMemoryDb = JSON.parse(raw);
+      inMemoryDb = sanitizeAuthorStockAvatars(JSON.parse(raw));
       return inMemoryDb!;
     } catch (err) {
       console.error('Error reading db.json, falling back to defaults:', err);
@@ -137,7 +163,7 @@ export function getDatabase(): DatabaseSchema {
   }
 
   // Create file with initial default data if it doesn't exist
-  const defaultDb = getDefaultDb();
+  const defaultDb = sanitizeAuthorStockAvatars(getDefaultDb());
   inMemoryDb = defaultDb;
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2), 'utf-8');
@@ -149,11 +175,11 @@ export function getDatabase(): DatabaseSchema {
 
 export function saveDatabase(data: Partial<DatabaseSchema>): DatabaseSchema {
   const current = getDatabase();
-  const updated: DatabaseSchema = {
+  const updated: DatabaseSchema = sanitizeAuthorStockAvatars({
     ...current,
     ...data,
     updatedAt: new Date().toISOString(),
-  };
+  });
 
   inMemoryDb = updated;
 
@@ -168,3 +194,4 @@ export function saveDatabase(data: Partial<DatabaseSchema>): DatabaseSchema {
 
   return updated;
 }
+
